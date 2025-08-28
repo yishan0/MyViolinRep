@@ -1,0 +1,1176 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel - Pending Pieces - MyViolinRep{% endblock %}
+
+{% block content %}
+<!-- Admin Header -->
+<section class="admin-header">
+    <div class="container">
+        <div class="header-content">
+            <h1 class="page-title">Admin Panel</h1>
+            <p class="page-subtitle">Review and approve pending piece submissions</p>
+        </div>
+    </div>
+</section>
+
+<!-- Admin Stats -->
+<section class="admin-stats">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ pending_pieces|length }}</div>
+                    <div class="stat-label">Pending Submissions</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ approved_count }}</div>
+                    <div class="stat-label">Approved Today</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ total_users }}</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-music"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ total_pieces }}</div>
+                    <div class="stat-label">Total Pieces</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Pending Pieces -->
+<section class="pending-pieces">
+    <div class="container">
+        <div class="section-header">
+            <h2>Pending Submissions</h2>
+            <div class="header-actions">
+                <button class="btn btn-outline" onclick="refreshPending()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <button class="btn btn-primary" onclick="approveAll()">
+                    <i class="fas fa-check-double"></i> Approve All
+                </button>
+                <button class="btn btn-danger" onclick="cleanupDatabase()">
+                    <i class="fas fa-trash"></i> Cleanup Fake Data
+                </button>
+                <button class="btn btn-info" onclick="seedChatMessages()">
+                    <i class="fas fa-comments"></i> Seed Chat Messages
+                </button>
+                <button class="btn btn-warning" onclick="purgeAllFakeData()" style="background-color: #ff6b35; border-color: #ff6b35;">
+                    <i class="fas fa-bomb"></i> PURGE ALL FAKE DATA
+                </button>
+            </div>
+        </div>
+        
+        {% if pending_pieces %}
+            <div class="pieces-grid">
+                {% for piece in pending_pieces %}
+                <div class="piece-card pending" data-piece-id="{{ piece.id }}">
+                    <div class="piece-header">
+                        <div class="piece-cover">
+                            {% if piece.cover_image %}
+                                <img src="{{ piece.cover_image }}" alt="{{ piece.title }}">
+                            {% else %}
+                                <div class="piece-cover-placeholder">
+                                    <i class="fas fa-music"></i>
+                                </div>
+                            {% endif %}
+                            <div class="pending-badge">Pending</div>
+                        </div>
+                        
+                        <div class="piece-info">
+                            <h3 class="piece-title">{{ piece.title }}</h3>
+                            <p class="piece-composer">{{ piece.composer }}</p>
+                            <div class="piece-meta">
+                                <span class="era">{{ piece.era }}</span>
+                                <span class="genre">{{ piece.genre }}</span>
+                                {% if piece.opus %}<span class="opus">{{ piece.opus }}</span>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="piece-details">
+                        {% if piece.length %}
+                        <div class="detail-item">
+                            <span class="detail-label">Length:</span>
+                            <span class="detail-value">{{ piece.length }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if piece.technical_tags %}
+                        <div class="detail-item">
+                            <span class="detail-label">Technical Tags:</span>
+                            <div class="tags-list">
+                                {% set tags = piece.technical_tags|from_json %}
+                                {% for tag in tags %}
+                                    <span class="tag">{{ tag }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if piece.recording_link %}
+                        <div class="detail-item">
+                            <span class="detail-label">Recording:</span>
+                            <a href="{{ piece.recording_link }}" target="_blank" class="detail-link">
+                                <i class="fas fa-external-link-alt"></i> View Recording
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        {% if piece.performance_links %}
+                        <div class="detail-item">
+                            <span class="detail-label">Performance Links:</span>
+                            <div class="links-list">
+                                {% set links = piece.performance_links|from_json %}
+                                {% for link in links %}
+                                    <a href="{{ link }}" target="_blank" class="detail-link">
+                                        <i class="fas fa-external-link-alt"></i> Performance {{ loop.index }}
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="piece-submitter">
+                        <div class="submitter-info">
+                            <span class="submitter-label">Submitted by:</span>
+                            <span class="submitter-name">{{ piece.submitter.username }}</span>
+                            <span class="submit-date">{{ piece.date_added.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="piece-actions">
+                        <button class="btn btn-success btn-sm" onclick="approvePiece({{ piece.id }})">
+                            <i class="fas fa-check"></i> Approve
+                        </button>
+                        <button class="btn btn-warning btn-sm" onclick="editPiece({{ piece.id }})">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="rejectPiece({{ piece.id }})">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3>No Pending Submissions</h3>
+                <p>All piece submissions have been reviewed!</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Edit Piece Modal -->
+<div id="edit-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Edit Piece</h3>
+            <button class="close-modal" onclick="closeEditModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="edit-form">
+                <div class="form-group">
+                    <label for="edit-title">Title</label>
+                    <input type="text" id="edit-title" name="title" class="form-control" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-composer">Composer</label>
+                        <input type="text" id="edit-composer" name="composer" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-opus">Opus</label>
+                        <input type="text" id="edit-opus" name="opus" class="form-control">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-era">Era</label>
+                        <select id="edit-era" name="era" class="form-control" required>
+                            <option value="Baroque">Baroque</option>
+                            <option value="Classical">Classical</option>
+                            <option value="Romantic">Romantic</option>
+                            <option value="20th Century">20th Century</option>
+                            <option value="Contemporary">Contemporary</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-genre">Genre</label>
+                        <select id="edit-genre" name="genre" class="form-control" required>
+                            <option value="Concerto">Concerto</option>
+                            <option value="Sonata">Sonata</option>
+                            <option value="Partita">Partita</option>
+                            <option value="Suite">Suite</option>
+                            <option value="Etude">Etude</option>
+                            <option value="Caprice">Caprice</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-length">Length</label>
+                    <input type="text" id="edit-length" name="length" class="form-control" placeholder="e.g., 25 minutes">
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-description">Description</label>
+                    <textarea id="edit-description" name="description" class="form-control" rows="3"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveEdit()">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Piece Modal -->
+<div id="reject-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Reject Piece</h3>
+            <button class="close-modal" onclick="closeRejectModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="reject-form">
+                <div class="form-group">
+                    <label for="reject-reason">Reason for Rejection</label>
+                    <select id="reject-reason" name="reason" class="form-control" required>
+                        <option value="">Select a reason...</option>
+                        <option value="duplicate">Duplicate piece already exists</option>
+                        <option value="inappropriate">Inappropriate content</option>
+                        <option value="incomplete">Incomplete information</option>
+                        <option value="not_violin">Not violin repertoire</option>
+                        <option value="poor_quality">Poor quality submission</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="reject-notes">Additional Notes (Optional)</label>
+                    <textarea id="reject-notes" name="notes" class="form-control" rows="3" placeholder="Provide specific feedback for the submitter..."></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeRejectModal()">Cancel</button>
+            <button class="btn btn-danger" onclick="confirmReject()">Reject Piece</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.admin-header {
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    color: white;
+    padding: 4rem 0;
+    text-align: center;
+}
+
+.admin-header .container {
+    position: relative;
+    z-index: 2;
+}
+
+.page-title {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.page-subtitle {
+    font-size: 1.25rem;
+    opacity: 0.9;
+}
+
+.admin-stats {
+    padding: 3rem 0;
+    background: white;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.pending-pieces {
+    padding: 3rem 0;
+    background: #f8f9fa;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.section-header h2 {
+    color: #2c3e50;
+    margin: 0;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.pieces-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.piece-card.pending {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #ffc107;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.piece-card.pending:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+}
+
+.piece-header {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.piece-cover {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    flex-shrink: 0;
+}
+
+.piece-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.piece-cover-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+}
+
+.pending-badge {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: #ffc107;
+    color: #212529;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.piece-info {
+    flex: 1;
+}
+
+.piece-title {
+    margin: 0 0 0.5rem 0;
+    color: #2c3e50;
+    font-size: 1.25rem;
+}
+
+.piece-composer {
+    margin: 0 0 1rem 0;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.piece-meta {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.era, .genre, .opus {
+    background: #f8f9fa;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.piece-details {
+    margin-bottom: 1.5rem;
+}
+
+.detail-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: #2c3e50;
+    min-width: 120px;
+    font-size: 0.875rem;
+}
+
+.detail-value {
+    color: #6c757d;
+    flex: 1;
+}
+
+.detail-link {
+    color: #8B0000;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.detail-link:hover {
+    text-decoration: underline;
+}
+
+.tags-list, .links-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.tag {
+    background: #f8f9fa;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    color: #6c757d;
+    display: inline-block;
+}
+
+.piece-submitter {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.submitter-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.submitter-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.submitter-name {
+    font-weight: 600;
+    color: #8B0000;
+}
+
+.submit-date {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.piece-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+/* Button Styles */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    justify-content: center;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    color: white;
+    box-shadow: 0 4px 15px rgba(139, 0, 0, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 0, 0, 0.4);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-outline {
+    background: transparent;
+    color: #8B0000;
+    border: 2px solid #8B0000;
+}
+
+.btn-outline:hover {
+    background: #8B0000;
+    color: white;
+    text-decoration: none;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #ffc107, #e0a800);
+    color: #212529;
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+}
+
+.btn-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+    color: #212529;
+    text-decoration: none;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.empty-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    font-size: 2rem;
+    color: white;
+}
+
+.empty-state h3 {
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+}
+
+.empty-state p {
+    color: #6c757d;
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 16px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.close-modal:hover {
+    background: #f8f9fa;
+    color: #8B0000;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.5rem 2rem;
+    border-top: 1px solid #e9ecef;
+    background: #f8f9fa;
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #8B0000;
+    box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+    .pieces-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .piece-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .piece-cover {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .header-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .page-title {
+        font-size: 2rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentPieceId = null;
+
+// Approve a single piece
+function approvePiece(pieceId) {
+    if (confirm('Are you sure you want to approve this piece?')) {
+        fetch(`/admin/approve/${pieceId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the piece card from the UI
+                const pieceCard = document.querySelector(`[data-piece-id="${pieceId}"]`);
+                pieceCard.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    pieceCard.remove();
+                    updateStats();
+                }, 300);
+                
+                showMessage('Piece approved successfully!', 'success');
+            } else {
+                showMessage('Error approving piece: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showMessage('Error approving piece: ' + error.message, 'error');
+        });
+    }
+}
+
+// Edit a piece
+function editPiece(pieceId) {
+    currentPieceId = pieceId;
+    
+    // Get piece data and populate form
+    fetch(`/admin/piece/${pieceId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const piece = data.piece;
+                document.getElementById('edit-title').value = piece.title;
+                document.getElementById('edit-composer').value = piece.composer;
+                document.getElementById('edit-opus').value = piece.opus || '';
+                document.getElementById('edit-era').value = piece.era;
+                document.getElementById('edit-genre').value = piece.genre;
+                document.getElementById('edit-length').value = piece.length || '';
+                document.getElementById('edit-description').value = piece.description || '';
+                
+                document.getElementById('edit-modal').style.display = 'block';
+            } else {
+                showMessage('Error loading piece data: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showMessage('Error loading piece data: ' + error.message, 'error');
+        });
+}
+
+// Save edit changes
+function saveEdit() {
+    const formData = new FormData(document.getElementById('edit-form'));
+    const data = Object.fromEntries(formData.entries());
+    
+    fetch(`/admin/edit/${currentPieceId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('Piece updated successfully!', 'success');
+            closeEditModal();
+            // Refresh the page to show updated data
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showMessage('Error updating piece: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('Error updating piece: ' + error.message, 'error');
+    });
+}
+
+// Reject a piece
+function rejectPiece(pieceId) {
+    currentPieceId = pieceId;
+    document.getElementById('reject-modal').style.display = 'block';
+}
+
+// Confirm rejection
+function confirmReject() {
+    const reason = document.getElementById('reject-reason').value;
+    const notes = document.getElementById('reject-notes').value;
+    
+    if (!reason) {
+        alert('Please select a reason for rejection.');
+        return;
+    }
+    
+    fetch(`/admin/reject/${currentPieceId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            reason: reason,
+            notes: notes
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove the piece card from the UI
+            const pieceCard = document.querySelector(`[data-piece-id="${currentPieceId}"]`);
+            pieceCard.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => {
+                pieceCard.remove();
+                updateStats();
+            }, 300);
+            
+            showMessage('Piece rejected successfully!', 'success');
+            closeRejectModal();
+        } else {
+            showMessage('Error rejecting piece: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('Error rejecting piece: ' + error.message, 'error');
+    });
+}
+
+// Approve all pending pieces
+function approveAll() {
+    if (confirm('Are you sure you want to approve ALL pending pieces? This action cannot be undone.')) {
+        fetch('/admin/approve-all', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage(`Approved ${data.count} pieces successfully!`, 'success');
+                // Remove all piece cards
+                document.querySelectorAll('.piece-card.pending').forEach(card => {
+                    card.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => card.remove(), 300);
+                });
+                updateStats();
+            } else {
+                showMessage('Error approving pieces: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showMessage('Error approving pieces: ' + error.message, 'error');
+        });
+    }
+}
+
+// Cleanup fake data from database
+function cleanupDatabase() {
+    if (confirm('Are you sure you want to remove ALL fake users and fake messages? This action cannot be undone and will clean up the database.')) {
+        fetch('/admin/cleanup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage(data.message, 'success');
+                // Refresh the page to show updated stats
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            } else {
+                showMessage('Error during cleanup: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showMessage('Error during cleanup: ' + error.message, 'error');
+        });
+    }
+}
+
+// Refresh pending pieces
+function refreshPending() {
+    location.reload();
+}
+
+// Update stats display
+function updateStats() {
+    const pendingCount = document.querySelectorAll('.piece-card.pending').length;
+    const pendingStat = document.querySelector('.stat-card:first-child .stat-number');
+    if (pendingStat) {
+        pendingStat.textContent = pendingCount;
+    }
+}
+
+// Close modals
+function closeEditModal() {
+    document.getElementById('edit-modal').style.display = 'none';
+    currentPieceId = null;
+}
+
+function closeRejectModal() {
+    document.getElementById('reject-modal').style.display = 'none';
+    currentPieceId = null;
+    document.getElementById('reject-form').reset();
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const editModal = document.getElementById('edit-modal');
+    const rejectModal = document.getElementById('reject-modal');
+    
+    if (event.target === editModal) {
+        closeEditModal();
+    }
+    if (event.target === rejectModal) {
+        closeRejectModal();
+    }
+}
+
+// Show message function
+function showMessage(message, type) {
+    // Create a simple message display
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message message-${type}`;
+    messageDiv.textContent = message;
+    messageDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        z-index: 1001;
+        animation: slideIn 0.3s ease;
+        background: ${type === 'success' ? '#28a745' : '#dc3545'};
+    `;
+    
+    document.body.appendChild(messageDiv);
+    
+    setTimeout(() => {
+        messageDiv.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => messageDiv.remove(), 300);
+    }, 3000);
+}
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
+function seedChatMessages() {
+    if (confirm('This will add sample chat messages to all rooms. Continue?')) {
+        fetch('/seed_chat_messages', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('Chat messages seeded successfully!', 'success');
+                } else {
+                    showMessage('Error: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('Error seeding chat messages: ' + error.message, 'error');
+            });
+    }
+}
+
+function purgeAllFakeData() {
+    if (confirm('⚠️ WARNING: This will PERMANENTLY DELETE ALL fake users, messages, ratings, and comments. Only the admin user will remain. This action cannot be undone. Are you absolutely sure?')) {
+        if (confirm('Final confirmation: You are about to delete ALL fake data. This will reset the entire system to a clean state. Continue?')) {
+            fetch('/admin/purge_all_fake_data', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showMessage('All fake data purged successfully! System reset to clean state.', 'success');
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000);
+                    } else {
+                        showMessage('Error: ' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    showMessage('Error purging fake data: ' + error.message, 'error');
+                });
+        }
+    }
+}
+</script>
+{% endblock %}

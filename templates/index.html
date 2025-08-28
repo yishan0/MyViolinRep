@@ -1,0 +1,794 @@
+{% extends "base.html" %}
+
+{% block title %}MyViolinRep - Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-background">
+        <div class="gradient-overlay"></div>
+        <div class="staff-lines"></div>
+    </div>
+    
+    <div class="hero-content">
+        <div class="hero-text">
+            <h1 class="hero-title">
+                <span class="title-line">Explore the repertoire.</span>
+                <span class="title-line">Rank the difficulty.</span>
+                <span class="title-line">Join the community.</span>
+            </h1>
+            <p class="hero-subtitle">The ultimate platform for violinists to discover, discuss, and master classical repertoire</p>
+            
+            <div class="hero-buttons">
+                <a href="{{ url_for('library') }}" class="btn btn-primary">
+                    <i class="fas fa-search"></i>
+                    Browse All Pieces
+                </a>
+                <a href="{{ url_for('chat') }}" class="btn btn-secondary">
+                    <i class="fas fa-comments"></i>
+                    Join the Discussion
+                </a>
+            </div>
+        </div>
+        
+        <!-- Removed violin drawing section -->
+    </div>
+</section>
+
+<!-- Quick Access Cards -->
+<section class="quick-access">
+    <div class="container">
+        <h2 class="section-title">Quick Access</h2>
+        
+        <div class="cards-grid">
+            <div class="card quick-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="card-icon">
+                    <i class="fas fa-music"></i>
+                </div>
+                <h3>Browse All Pieces</h3>
+                <p>Explore our comprehensive library of violin repertoire with advanced filtering and search</p>
+                <a href="{{ url_for('library') }}" class="card-link">
+                    Explore Library
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            
+            <div class="card quick-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="card-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <h3>Join the Discussion</h3>
+                <p>Connect with fellow violinists, share tips, and discuss interpretation</p>
+                <a href="{{ url_for('chat') }}" class="card-link">
+                    Start Chatting
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            
+            <div class="card quick-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="card-icon">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <h3>Leaderboard</h3>
+                <p>See top contributors and most helpful community members</p>
+                <a href="{{ url_for('leaderboard') }}" class="card-link">
+                    View Rankings
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Highlights Section -->
+<section class="highlights">
+    <div class="container">
+        <h2 class="section-title">Highlights</h2>
+        
+        <div class="highlights-grid">
+            <!-- Featured Piece of the Week -->
+            <div class="highlight-card featured-piece" data-aos="fade-right">
+                <div class="highlight-header">
+                    <h3>Featured Piece of the Week</h3>
+                    <div class="badge">Featured</div>
+                </div>
+                
+                {% if featured_piece %}
+                <div class="piece-preview">
+                    <div class="piece-cover">
+                        <i class="fas fa-music"></i>
+                    </div>
+                    <div class="piece-info">
+                        <h4>{{ featured_piece.title }}</h4>
+                        <p class="composer">{{ featured_piece.composer }}</p>
+                        <p class="era">{{ featured_piece.era }} • {{ featured_piece.genre }}</p>
+                        <div class="difficulty-meter">
+                            <div class="difficulty-label">Difficulty</div>
+                            <div class="difficulty-bar">
+                                <div class="difficulty-fill" style="width: {{ (featured_piece.difficulty_avg / 10) * 100 }}%"></div>
+                            </div>
+                            <span class="difficulty-score">{{ "%.1f"|format(featured_piece.difficulty_avg) }}/10</span>
+                        </div>
+                    </div>
+                </div>
+                <a href="{{ url_for('piece_detail', piece_id=featured_piece.id) }}" class="btn btn-outline">View Details</a>
+                {% else %}
+                <div class="piece-preview">
+                    <div class="piece-cover">
+                        <i class="fas fa-music"></i>
+                    </div>
+                    <div class="piece-info">
+                        <h4>No Featured Piece Yet</h4>
+                        <p>Be the first to submit a piece!</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Recently Added -->
+            <div class="highlight-card recent-additions" data-aos="fade-left">
+                <div class="highlight-header">
+                    <h3>Recently Added</h3>
+                    <a href="{{ url_for('library') }}" class="view-all">View All</a>
+                </div>
+                
+                <div class="recent-list">
+                    {% for piece in recent_pieces[:3] %}
+                    <div class="recent-item">
+                        <div class="recent-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <div class="recent-info">
+                            <h5>{{ piece.title }}</h5>
+                            <p>{{ piece.composer }}</p>
+                        </div>
+                        <a href="{{ url_for('piece_detail', piece_id=piece.id) }}" class="recent-link">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Top Performers -->
+<section class="top-performers">
+    <div class="container">
+        <h2 class="section-title">Top Community Members</h2>
+        
+        <div class="performers-grid">
+            {% for user in top_users %}
+            <div class="performer-card" data-aos="zoom-in" data-aos-delay="{{ loop.index * 100 }}">
+                <div class="performer-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="performer-info">
+                    <h4>{{ user.username }}</h4>
+                    <p class="performer-score">{{ user.contribution_score }} points</p>
+                    <div class="performer-badges">
+                        {% if user.contribution_score >= 100 %}
+                            <span class="badge gold">Gold</span>
+                        {% elif user.contribution_score >= 50 %}
+                            <span class="badge silver">Silver</span>
+                        {% elif user.contribution_score >= 20 %}
+                            <span class="badge bronze">Bronze</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <a href="{{ url_for('profile', username=user.username) }}" class="performer-link">
+                    <i class="fas fa-user"></i>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content" data-aos="fade-up">
+            <h2>Ready to Join the Community?</h2>
+            <p>Start exploring repertoire, sharing your experiences, and connecting with fellow violinists today.</p>
+            
+            <div class="cta-buttons">
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('submit_piece') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Submit a Piece
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('register') }}" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i>
+                        Create Account
+                    </a>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Sign In
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Animated Gradient Background */
+.hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(-45deg, #8B0000, #DAA520, #2c3e50, #8B0000);
+    background-size: 400% 400%;
+    animation: gradientShift 8s ease infinite;
+    z-index: -2;
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.gradient-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: -1;
+}
+
+.staff-lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px),
+        linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: staffMove 20s linear infinite;
+    z-index: -1;
+}
+
+@keyframes staffMove {
+    0% {
+        transform: translateX(0) translateY(0);
+    }
+    100% {
+        transform: translateX(-50px) translateY(-50px);
+    }
+}
+
+.hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    overflow: hidden;
+}
+
+.hero-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    z-index: 1;
+    text-align: center;
+}
+
+.hero-text {
+    flex: 1;
+    max-width: 800px;
+}
+
+.hero-title {
+    font-size: 4rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    line-height: 1.2;
+}
+
+.title-line {
+    display: block;
+    opacity: 0;
+    animation: titleSlideIn 0.8s ease forwards;
+}
+
+.title-line:nth-child(1) { animation-delay: 0.2s; }
+.title-line:nth-child(2) { animation-delay: 0.4s; }
+.title-line:nth-child(3) { animation-delay: 0.6s; }
+
+@keyframes titleSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.hero-subtitle {
+    font-size: 1.5rem;
+    margin-bottom: 3rem;
+    opacity: 0.9;
+    line-height: 1.6;
+    animation: fadeInUp 1s ease 0.8s forwards;
+    opacity: 0;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fadeInUp 1s ease 1s forwards;
+    opacity: 0;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.125rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #DAA520, #FFD700);
+    color: #2c3e50;
+    box-shadow: 0 8px 30px rgba(218, 165, 32, 0.4);
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(218, 165, 32, 0.6);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: white;
+    border: 2px solid white;
+    box-shadow: 0 8px 30px rgba(255, 255, 255, 0.2);
+}
+
+.btn-secondary:hover {
+    background: white;
+    color: #2c3e50;
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(255, 255, 255, 0.4);
+}
+
+/* Quick Access Section */
+.quick-access {
+    padding: 6rem 0;
+    background: white;
+}
+
+.section-title {
+    text-align: center;
+    font-size: 3rem;
+    color: #2c3e50;
+    margin-bottom: 4rem;
+    font-weight: 700;
+}
+
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.quick-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2.5rem;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.quick-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.card-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    font-size: 2rem;
+    color: white;
+}
+
+.quick-card h3 {
+    font-size: 1.5rem;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.quick-card p {
+    color: #6c757d;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
+.card-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #8B0000;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.card-link:hover {
+    color: #DAA520;
+    transform: translateX(5px);
+}
+
+/* Highlights Section */
+.highlights {
+    padding: 6rem 0;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+}
+
+.highlights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.highlight-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.highlight-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.highlight-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.highlight-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+}
+
+.highlight-title {
+    font-size: 1.25rem;
+    color: #2c3e50;
+    margin: 0;
+    font-weight: 600;
+}
+
+.recent-items {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.recent-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.recent-item:hover {
+    background: #e9ecef;
+    transform: translateX(5px);
+}
+
+.recent-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1rem;
+}
+
+.recent-info h5 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1rem;
+}
+
+.recent-info p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.recent-link {
+    margin-left: auto;
+    color: #8B0000;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.recent-link:hover {
+    color: #DAA520;
+    transform: scale(1.1);
+}
+
+/* Top Performers Section */
+.top-performers {
+    padding: 6rem 0;
+    background: white;
+}
+
+.performers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.performer-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+    position: relative;
+}
+
+.performer-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.performer-avatar {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    color: white;
+}
+
+.performer-info h4 {
+    font-size: 1.25rem;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.performer-score {
+    color: #6c757d;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.performer-badges {
+    margin-bottom: 1.5rem;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin: 0 0.25rem;
+}
+
+.badge.bronze {
+    background: linear-gradient(135deg, #cd7f32, #daa520);
+    color: white;
+}
+
+.badge.silver {
+    background: linear-gradient(135deg, #c0c0c0, #a9a9a9);
+    color: white;
+}
+
+.badge.gold {
+    background: linear-gradient(135deg, #ffd700, #ffed4e);
+    color: #2c3e50;
+}
+
+.performer-link {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    color: #8B0000;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.performer-link:hover {
+    color: #DAA520;
+    transform: scale(1.1);
+}
+
+/* CTA Section */
+.cta-section {
+    padding: 6rem 0;
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    color: white;
+    text-align: center;
+}
+
+.cta-content h2 {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+}
+
+.cta-content p {
+    font-size: 1.25rem;
+    margin-bottom: 3rem;
+    opacity: 0.9;
+    line-height: 1.6;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.cta-section .btn-primary {
+    background: white;
+    color: #8B0000;
+    box-shadow: 0 8px 30px rgba(255, 255, 255, 0.3);
+}
+
+.cta-section .btn-primary:hover {
+    background: #f8f9fa;
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(255, 255, 255, 0.4);
+}
+
+.cta-section .btn-outline {
+    background: transparent;
+    color: white;
+    border: 2px solid white;
+    box-shadow: 0 8px 30px rgba(255, 255, 255, 0.2);
+}
+
+.cta-section .btn-outline:hover {
+    background: white;
+    color: #8B0000;
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(255, 255, 255, 0.4);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 3rem;
+    }
+    
+    .hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.25rem;
+    }
+    
+    .hero-buttons {
+        justify-content: center;
+    }
+    
+    .cards-grid {
+        grid-template-columns: 1fr;
+        padding: 0 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+    AOS.init({
+        duration: 1000,
+        once: true,
+        offset: 100
+    });
+</script>
+{% endblock %}

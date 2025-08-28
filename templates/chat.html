@@ -1,0 +1,2350 @@
+{% extends "base.html" %}
+
+{% block title %}Community Chat - MyViolinRep{% endblock %}
+
+{% block content %}
+<!-- Chat Header -->
+<section class="chat-header">
+    <div class="container">
+        <div class="header-content">
+            <h1 class="page-title">Community Chat</h1>
+            <p class="page-subtitle">Connect with fellow violinists in real-time</p>
+        </div>
+    </div>
+</section>
+
+<!-- Chat Interface -->
+<section class="chat-interface">
+    <div class="container">
+        <div class="chat-container">
+            <!-- Chat Sidebar -->
+            <div class="chat-sidebar">
+                <div class="sidebar-header">
+                    <h3><i class="fas fa-users"></i> Online Members</h3>
+                    <span class="online-count" id="online-count">3 online</span>
+                </div>
+                
+                <div class="online-members" id="online-members">
+                    <!-- Members will be populated dynamically -->
+                </div>
+                
+                <div class="sidebar-footer">
+                    <div class="chat-rooms">
+                        <h4>Chat Rooms</h4>
+                        <div class="room-list" id="room-list">
+                            <div class="room-item active" data-room="general">
+                                <i class="fas fa-hashtag"></i>
+                                <span>General</span>
+                            </div>
+                            <div class="room-item" data-room="technique">
+                                <i class="fas fa-hashtag"></i>
+                                <span>Technique Tips</span>
+                            </div>
+                            <div class="room-item" data-room="repertoire">
+                                <i class="fas fa-hashtag"></i>
+                                <span>Repertoire Discussion</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="direct-messages">
+                        <h4>Direct Messages</h4>
+                        <div class="dm-search">
+                            <input type="text" id="dm-search" placeholder="Search users..." class="dm-search-input">
+                            <div class="search-results" id="search-results"></div>
+                        </div>
+                        <div class="dm-list" id="dm-list">
+                            <!-- DMs will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chat Main -->
+            <div class="chat-main">
+                <div class="chat-header-bar">
+                    <div class="current-room">
+                        <i class="fas fa-hashtag"></i>
+                        <span id="current-room-name">General</span>
+                    </div>
+                    <div class="chat-actions">
+                        <button class="action-btn" id="search-btn" title="Search Messages">
+                            <i class="fas fa-search"></i>
+                        </button>
+                        <button class="action-btn" id="settings-btn" title="Chat Settings">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                        {% if current_user.username == 'admin' %}
+                            <button class="action-btn admin-btn" id="admin-panel-btn" title="Admin Panel">
+                                <i class="fas fa-shield-alt"></i>
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="chat-messages" id="chat-messages">
+                    <!-- Messages will be populated here -->
+                </div>
+                
+                <div class="chat-input">
+                    <form id="chat-form" class="input-form" onsubmit="event.preventDefault(); sendMessage();">
+                        <div class="input-wrapper">
+                            <input type="text" id="message-input" placeholder="Type your message..." maxlength="500">
+                            <div class="input-actions">
+                                <button type="button" class="action-btn" title="Emoji" id="emoji-btn" onclick="toggleEmojiPicker()">
+                                    <i class="fas fa-smile"></i>
+                                </button>
+                                <button type="button" class="action-btn" title="Attach" id="attach-btn" onclick="toggleAttachmentMenu()">
+                                    <i class="fas fa-paperclip"></i>
+                                </button>
+                                <button type="submit" class="send-btn">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <!-- Emoji Picker -->
+                    <div id="emoji-picker" class="emoji-picker">
+                        <div class="emoji-categories">
+                            <button class="emoji-category active" data-category="smileys">😀</button>
+                            <button class="emoji-category" data-category="animals">🐶</button>
+                            <button class="emoji-category" data-category="food">🍕</button>
+                            <button class="emoji-category" data-category="activities">⚽</button>
+                            <button class="emoji-category" data-category="travel">✈️</button>
+                            <button class="emoji-category" data-category="objects">💡</button>
+                            <button class="emoji-category" data-category="symbols">❤️</button>
+                            <button class="emoji-category" data-category="flags">🏁</button>
+                        </div>
+                        <div class="emoji-grid" id="emoji-grid">
+                            <!-- Emojis will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Attachment Menu -->
+                    <div id="attachment-menu" class="attachment-menu">
+                        <div class="attachment-option" onclick="addImageLink()">
+                            <i class="fas fa-image"></i>
+                            <span>Image Link</span>
+                        </div>
+                        <div class="attachment-option" onclick="addYouTubeLink()">
+                            <i class="fab fa-youtube"></i>
+                            <span>YouTube Video</span>
+                        </div>
+                        <div class="attachment-option" onclick="addSpotifyLink()">
+                            <i class="fab fa-spotify"></i>
+                            <span>Spotify Track</span>
+                        </div>
+                        <div class="attachment-option" onclick="addSheetMusicLink()">
+                            <i class="fas fa-music"></i>
+                            <span>Sheet Music</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Search Modal -->
+<div id="search-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Search Messages</h3>
+            <button class="close-modal" onclick="closeSearchModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="search-form">
+                <input type="text" id="message-search" placeholder="Search for messages..." class="search-input">
+                <button class="btn btn-primary" onclick="searchMessages()">Search</button>
+            </div>
+            <div class="search-results" id="message-search-results">
+                <!-- Search results will appear here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settings-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Chat Settings</h3>
+            <button class="close-modal" onclick="closeSettingsModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="settings-section">
+                <h4>Notifications</h4>
+                <label class="setting-item">
+                    <input type="checkbox" id="sound-notifications" checked>
+                    <span>Sound notifications</span>
+                </label>
+                <label class="setting-item">
+                    <input type="checkbox" id="desktop-notifications">
+                    <span>Desktop notifications</span>
+                </label>
+            </div>
+            <div class="settings-section">
+                <h4>Display</h4>
+                <label class="setting-item">
+                    <input type="checkbox" id="compact-mode">
+                    <span>Compact mode</span>
+                </label>
+                <label class="setting-item">
+                    <input type="checkbox" id="show-timestamps" checked>
+                    <span>Show timestamps</span>
+                </label>
+            </div>
+            <div class="settings-section">
+                <h4>Privacy</h4>
+                <label class="setting-item">
+                    <input type="checkbox" id="show-online-status" checked>
+                    <span>Show online status</span>
+                </label>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Panel Modal -->
+<div id="admin-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Admin Panel</h3>
+            <button class="close-modal" onclick="closeAdminModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="admin-section">
+                <h4>Message Management</h4>
+                <div class="admin-actions">
+                    <button class="btn btn-danger" onclick="clearAllMessages()">Clear All Messages</button>
+                    <button class="btn btn-warning" onclick="muteUser()">Mute User</button>
+                </div>
+            </div>
+            <div class="admin-section">
+                <h4>User Management</h4>
+                <div class="admin-actions">
+                    <button class="btn btn-warning" onclick="banUser()">Ban User</button>
+                    <button class="btn btn-info" onclick="viewUserLogs()">View User Logs</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chat Features Info -->
+<section class="chat-features">
+    <div class="container">
+        <h2>Chat Features</h2>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3>Real-time Messaging</h3>
+                <p>Instant communication with fellow violinists around the world</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>Multiple Chat Rooms</h3>
+                <p>Join specialized discussions for technique, repertoire, and more</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-comment-dots"></i>
+                </div>
+                <h3>Direct Messages</h3>
+                <p>Private conversations with other users</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Safe Environment</h3>
+                <p>Moderated chat ensuring respectful and helpful discussions</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h3>Message Search</h3>
+                <p>Find specific conversations and topics quickly</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h3>Mobile Friendly</h3>
+                <p>Chat on any device, anywhere, anytime</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.chat-header {
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    color: white;
+    padding: 3rem 0;
+    text-align: center;
+}
+
+.chat-header .container {
+    position: relative;
+    z-index: 2;
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.page-title {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.page-subtitle {
+    font-size: 1.25rem;
+    opacity: 0.9;
+}
+
+.chat-interface {
+    padding: 2rem 0;
+    background: #f8f9fa;
+    min-height: 70vh;
+}
+
+.chat-container {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.chat-sidebar {
+    background: #f8f9fa;
+    border-right: 1px solid #e9ecef;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+    background: white;
+}
+
+.sidebar-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0 0 0.5rem 0;
+    color: #2c3e50;
+    font-size: 1.125rem;
+}
+
+.sidebar-header h3 i {
+    color: #8B0000;
+}
+
+.online-count {
+    color: #28a745;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.online-members {
+    padding: 1rem;
+    flex: 1;
+}
+
+.member-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+}
+
+.member-item:hover {
+    background: rgba(139, 0, 0, 0.05);
+}
+
+.member-item.online {
+    background: rgba(40, 167, 69, 0.1);
+}
+
+.member-avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+}
+
+.member-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.member-name {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.875rem;
+}
+
+.member-status {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.member-status.online {
+    color: #28a745;
+}
+
+.sidebar-footer {
+    padding: 1rem;
+    border-top: 1px solid #e9ecef;
+    background: white;
+}
+
+.chat-rooms h4, .direct-messages h4 {
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+    font-size: 1rem;
+}
+
+.room-list, .dm-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.room-item, .dm-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #6c757d;
+}
+
+.room-item:hover, .dm-item:hover {
+    background: rgba(139, 0, 0, 0.05);
+    color: #8B0000;
+}
+
+.room-item.active, .dm-item.active {
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    color: white;
+}
+
+.room-item i, .dm-item i {
+    font-size: 0.875rem;
+}
+
+.dm-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin-bottom: 0.5rem;
+}
+
+.dm-item:hover {
+    background-color: rgba(139, 0, 0, 0.1);
+}
+
+.dm-item.active {
+    background-color: rgba(139, 0, 0, 0.2);
+    border-left: 3px solid #8B0000;
+}
+
+.dm-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #8B0000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1rem;
+}
+
+.dm-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.dm-name {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.875rem;
+}
+
+.dm-status {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.no-dms {
+    padding: 1rem;
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    font-size: 0.875rem;
+}
+
+.dm-search {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.dm-search-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 0.875rem;
+}
+
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+}
+
+.search-result-item {
+    padding: 1rem;
+    border-bottom: 1px solid #f8f9fa;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.search-result-item:hover {
+    background-color: #f8f9fa;
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-item .user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.search-result-item .username {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.search-result-item .user-bio {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-left: 1.75rem;
+}
+
+.no-results {
+    padding: 1rem;
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.chat-main {
+    display: flex;
+    flex-direction: column;
+    height: 600px;
+}
+
+.chat-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+    background: white;
+}
+
+.current-room {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.current-room i {
+    color: #8B0000;
+}
+
+.chat-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #6c757d;
+    transition: all 0.3s ease;
+}
+
+.action-btn:hover {
+    background: rgba(139, 0, 0, 0.05);
+    color: #8B0000;
+}
+
+.admin-btn {
+    color: #dc3545;
+}
+
+.admin-btn:hover {
+    background: rgba(220, 53, 69, 0.1);
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.message-item {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.message-item.own-message {
+    flex-direction: row-reverse;
+}
+
+.message-avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.message-content {
+    flex: 1;
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 12px;
+    border-top-left-radius: 4px;
+    position: relative;
+}
+
+.own-message .message-content {
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    color: white;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 4px;
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.message-author {
+    font-weight: 600;
+    color: #8B0000;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.own-message .message-author {
+    color: white;
+}
+
+.message-time {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.own-message .message-time {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.message-text {
+    color: #2c3e50;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.own-message .message-text {
+    color: white;
+}
+
+.message-actions {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    display: none;
+    gap: 0.25rem;
+}
+
+.message-content:hover .message-actions {
+    display: flex;
+}
+
+.message-action-btn {
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 4px;
+    padding: 0.25rem;
+    cursor: pointer;
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.message-action-btn:hover {
+    background: white;
+    color: #8B0000;
+}
+
+.chat-input {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e9ecef;
+    background: white;
+}
+
+.input-form {
+    margin: 0;
+}
+
+.input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 25px;
+    padding: 0.75rem 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.input-wrapper:focus-within {
+    border-color: #8B0000;
+}
+
+#message-input {
+    flex: 1;
+    border: none;
+    background: none;
+    outline: none;
+    font-size: 1rem;
+    color: #2c3e50;
+}
+
+.input-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.send-btn {
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    transition: transform 0.3s ease;
+}
+
+.send-btn:hover {
+    transform: scale(1.05);
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 16px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.close-modal:hover {
+    background: #f8f9fa;
+    color: #8B0000;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.5rem 2rem;
+    border-top: 1px solid #e9ecef;
+    background: #f8f9fa;
+}
+
+/* Search Form */
+.search-form {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.search-input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+/* Settings */
+.settings-section {
+    margin-bottom: 2rem;
+}
+
+.settings-section h4 {
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+}
+
+.setting-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+}
+
+.setting-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+}
+
+/* Admin Panel */
+.admin-section {
+    margin-bottom: 2rem;
+}
+
+.admin-section h4 {
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+/* Emoji Picker Styles */
+.emoji-picker {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    width: 320px;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    display: none;
+    margin-bottom: 10px;
+}
+
+.emoji-picker.show {
+    display: block;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.emoji-categories {
+    display: flex;
+    border-bottom: 1px solid #e9ecef;
+    padding: 0.5rem;
+    gap: 0.25rem;
+}
+
+.emoji-category {
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.25rem;
+    transition: all 0.3s ease;
+}
+
+.emoji-category:hover {
+    background: #f8f9fa;
+}
+
+.emoji-category.active {
+    background: #8B0000;
+    color: white;
+}
+
+.emoji-grid {
+    padding: 1rem;
+    max-height: 200px;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 0.5rem;
+}
+
+.emoji-item {
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.emoji-item:hover {
+    background: #f8f9fa;
+    transform: scale(1.1);
+}
+
+/* Attachment Menu Styles */
+.attachment-menu {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    width: 200px;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    display: none;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.attachment-menu.show {
+    display: block;
+    animation: slideUp 0.3s ease;
+}
+
+.attachment-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.attachment-option:last-child {
+    border-bottom: none;
+}
+
+.attachment-option:hover {
+    background: #f8f9fa;
+    color: #8B0000;
+}
+
+.attachment-option i {
+    font-size: 1.125rem;
+    width: 20px;
+    text-align: center;
+}
+
+.attachment-option span {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Chat Features */
+.chat-features {
+    padding: 4rem 0;
+    background: white;
+}
+
+.chat-features h2 {
+    text-align: center;
+    margin-bottom: 3rem;
+    color: #2c3e50;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.feature-card {
+    text-align: center;
+    padding: 2rem;
+}
+
+.feature-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    color: white;
+}
+
+.feature-card h3 {
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+}
+
+.feature-card p {
+    color: #6c757d;
+    margin: 0;
+    line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+    .chat-container {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+    
+    .chat-sidebar {
+        order: 2;
+        border-right: none;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .chat-main {
+        order: 1;
+        height: 400px;
+    }
+    
+    .page-title {
+        font-size: 2rem;
+    }
+    
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}
+
+/* Emoji Picker */
+#emoji-picker {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 1rem;
+    max-width: 300px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+}
+
+#emoji-list {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 0.5rem;
+}
+
+.emoji {
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+    text-align: center;
+    user-select: none;
+}
+
+.emoji:hover {
+    background-color: #f8f9fa;
+}
+
+/* Attachment Menu */
+#attachment-menu {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 1rem;
+    min-width: 200px;
+    z-index: 1000;
+    display: none;
+}
+
+.attachment-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.attachment-option:hover {
+    background-color: #f8f9fa;
+}
+
+.attachment-option i {
+    font-size: 1.25rem;
+    color: #8B0000;
+}
+
+/* Enhanced Search Results */
+.search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.search-result-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(4px);
+}
+
+.search-result-item .user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.search-result-item .user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.search-result-item .user-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.search-result-item .username {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.9rem;
+}
+
+.search-result-item .user-bio {
+    font-size: 0.8rem;
+    color: #6c757d;
+    line-height: 1.2;
+}
+
+.search-result-item .start-chat-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #8B0000;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+}
+
+.search-result-item:hover .start-chat-btn {
+    background: #a52a2a;
+    transform: scale(1.1);
+}
+
+/* Enhanced DM Items */
+.dm-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #f0f0f0;
+    position: relative;
+}
+
+.dm-item:hover {
+    background-color: #f8f9fa;
+}
+
+.dm-item.active {
+    background-color: #e3f2fd;
+    border-left: 3px solid #8B0000;
+}
+
+.dm-item .dm-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.dm-item .dm-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.dm-item .dm-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.dm-item .dm-name {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.9rem;
+}
+
+.dm-item .dm-status {
+    font-size: 0.75rem;
+    color: #6c757d;
+    line-height: 1.2;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dm-item .dm-indicator {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dm-item .dm-indicator i {
+    font-size: 0.6rem;
+    color: #6c757d;
+    transition: all 0.2s ease;
+}
+
+.dm-item .dm-indicator i.unread {
+    color: #e74c3c;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.no-dms {
+    text-align: center;
+    padding: 1rem;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.no-results {
+    text-align: center;
+    padding: 1rem;
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Ensure proper positioning for input actions */
+.input-actions {
+    position: relative;
+}
+
+#emoji-btn, #attach-btn {
+    position: relative;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Chat state
+let currentRoom = 'general';
+let currentDM = null;
+let messages = [];
+let onlineUsers = [];
+let currentUser = '{{ current_user.username if current_user else "" }}';
+console.log('currentUser variable set to:', currentUser);
+let chatSettings = {
+    soundNotifications: true,
+    desktopNotifications: false,
+    compactMode: false,
+    showTimestamps: true,
+    showOnlineStatus: true
+};
+
+// Switch room
+function switchRoom(roomName) {
+    currentRoom = roomName;
+    currentDM = null;
+    
+    // Update UI
+    document.querySelectorAll('.room-item').forEach(item => item.classList.remove('active'));
+    document.querySelector(`[data-room="${roomName}"]`).classList.add('active');
+    document.getElementById('current-room-name').innerHTML = `<i class="fas fa-hashtag"></i> ${roomName}`;
+    
+    // Clear chat
+    document.getElementById('chat-messages').innerHTML = '';
+    
+    // Add welcome message
+    addSystemMessage(`Joined #${roomName}`);
+    
+    // Load room messages
+    loadMessages(roomName);
+}
+
+// Initialize chat
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Chat page loaded, currentUser:', currentUser);
+    
+    // Check if we have a room parameter in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get('room');
+    
+    console.log('Room parameter from URL:', roomParam);
+    
+    if (roomParam && roomParam.startsWith('dm_')) {
+        // Extract username from DM room
+        const usernames = roomParam.split('_').slice(1);
+        console.log('Extracted usernames:', usernames);
+        
+        if (usernames.length === 2) {
+            // Find which username is NOT the current user
+            let otherUsername;
+            if (usernames[0] === currentUser) {
+                otherUsername = usernames[1];
+            } else if (usernames[1] === currentUser) {
+                otherUsername = usernames[0];
+            } else {
+                // If neither matches currentUser, use the second one (this handles cases where usernames might be in different order)
+                otherUsername = usernames[1];
+            }
+            
+            console.log('Starting DM with:', otherUsername, 'from room:', roomParam);
+            startDM(otherUsername);
+        }
+    } else if (roomParam) {
+        console.log('Switching to room:', roomParam);
+        // Switch to specific room
+        switchRoom(roomParam);
+    } else {
+        console.log('No room parameter, defaulting to general');
+        // Default to general room
+        switchRoom('general');
+    }
+    
+    // Load initial data
+    loadOnlineUsers();
+    
+    // Set up room switching
+    document.querySelectorAll('.room-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const room = this.getAttribute('data-room');
+            switchRoom(room);
+        });
+    });
+    
+    // Set up DM search
+    const dmSearch = document.getElementById('dm-search');
+    if (dmSearch) {
+        dmSearch.addEventListener('input', function() {
+            const query = this.value.trim();
+            if (query.length >= 2) {
+                searchUsers(query);
+            } else {
+                const searchResults = document.getElementById('search-results');
+                if (searchResults) {
+                    searchResults.innerHTML = '';
+                    searchResults.style.display = 'none';
+                }
+            }
+        });
+        
+        // Hide search results when clicking outside
+        document.addEventListener('click', function(e) {
+            const searchResults = document.getElementById('search-results');
+            if (searchResults && !dmSearch.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.style.display = 'none';
+            }
+        });
+    }
+    
+    // Set up other event listeners
+    setupEventListeners();
+    
+    // Start real-time updates
+    startRealTimeUpdates();
+});
+
+// Event listeners
+function setupEventListeners() {
+    // Chat form submission
+    document.getElementById('chat-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        sendMessage();
+    });
+    
+    // Search button
+    document.getElementById('search-btn').addEventListener('click', function() {
+        openSearchModal();
+    });
+    
+    // Settings button
+    document.getElementById('settings-btn').addEventListener('click', function() {
+        openSettingsModal();
+    });
+    
+    // Admin panel button
+    const adminBtn = document.getElementById('admin-panel-btn');
+    if (adminBtn) {
+        adminBtn.addEventListener('click', function() {
+            openAdminModal();
+        });
+    }
+    
+    // DM search
+    document.getElementById('dm-search').addEventListener('input', function() {
+        searchUsers(this.value);
+    });
+}
+
+// Start DM with user
+function startDM(username) {
+    currentDM = username;
+    currentRoom = null;
+    
+    // Update UI
+    document.querySelectorAll('.room-item').forEach(item => item.classList.remove('active'));
+    document.querySelectorAll('.dm-item').forEach(item => item.classList.remove('active'));
+    
+    // Update current room display
+    document.getElementById('current-room-name').innerHTML = `<i class="fas fa-user"></i> ${username}`;
+    
+    // Clear chat
+    document.getElementById('chat-messages').innerHTML = '';
+    
+    // Add system message
+    addSystemMessage(`Started direct message with ${username}`);
+    
+    // Get the room name from the URL parameter (it's already correct)
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomName = urlParams.get('room');
+    
+    console.log('Loading messages for DM room:', roomName);
+    
+    // Load messages for this DM
+    loadMessages(roomName);
+    
+    // Update DM list to include this new DM
+    loadActiveDMs();
+}
+
+// Send message
+function sendMessage() {
+    const messageInput = document.getElementById('message-input');
+    const content = messageInput.value.trim();
+    
+    if (!content) return;
+    
+    let room;
+    if (currentDM) {
+        // For DMs, get the room name from the URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        room = urlParams.get('room');
+    } else {
+        room = currentRoom;
+    }
+    
+    // Clear input immediately to prevent double-sending
+    messageInput.value = '';
+    
+    fetch('/send_message', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            content: content,
+            room: room,
+            recipient: currentDM
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Add message to chat immediately
+            addMessage(currentUser, content, true, null, Date.now());
+            
+            // Reload messages to get the latest from server
+            setTimeout(() => {
+                loadMessages(room);
+            }, 200);
+            
+            // Update DM list to show the new message
+            if (currentDM) {
+                loadActiveDMs();
+            }
+        } else {
+            showMessage('Error sending message: ' + data.message, 'error');
+            // Restore message content if sending failed
+            messageInput.value = content;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showMessage('Error sending message. Please try again.', 'error');
+        // Restore message content if sending failed
+        messageInput.value = content;
+    });
+}
+
+// Add message to chat
+function addMessage(sender, content, isOwn, timestamp = null, messageId = null) {
+    const chatMessages = document.getElementById('chat-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${isOwn ? 'own-message' : 'other-message'}`;
+    messageDiv.setAttribute('data-message-id', messageId || '');
+    
+    const time = timestamp || new Date().toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+    });
+    
+    messageDiv.innerHTML = `
+        <div class="message-header">
+            <span class="message-sender">${sender}</span>
+            <span class="message-time">${time}</span>
+            ${isOwn ? `
+                <div class="message-actions">
+                    <button class="action-btn" onclick="editMessage('${messageId}')" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn" onclick="deleteMessage('${messageId}')" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            ` : ''}
+        </div>
+        <div class="message-content">${content}</div>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Add system message
+function addSystemMessage(text) {
+    const chatMessages = document.getElementById('chat-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message-item system-message';
+    
+    messageDiv.innerHTML = `
+        <div class="message-content system">
+            <div class="message-text">${text}</div>
+        </div>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Handle new message from other user
+function handleNewMessage(message) {
+    // Only add if it's not from current user and not already displayed
+    if (message.sender !== currentUser && !messages.some(m => m.id === message.id)) {
+        messages.push(message);
+        addMessage(message.sender, message.content, false, message.date_sent, message.id);
+        
+        // Play notification sound for new messages from others
+        playNotificationSound();
+        
+        // Scroll to bottom to show new message
+        const chatMessages = document.getElementById('chat-messages');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+}
+
+// Enhanced message loading with duplicate prevention
+function loadMessages(room, silent = false) {
+    if (!room) {
+        console.log('loadMessages called with no room');
+        return;
+    }
+    
+    console.log('loadMessages called with room:', room, 'silent:', silent);
+    
+    fetch(`/get_messages/${room}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Messages loaded successfully for room:', room, 'count:', data.messages.length);
+                const newMessages = data.messages;
+                
+                // Check if we have new messages
+                let hasNewMessages = false;
+                if (messages.length !== newMessages.length) {
+                    hasNewMessages = true;
+                } else {
+                    // Check if any message IDs are different
+                    for (let i = 0; i < Math.min(messages.length, newMessages.length); i++) {
+                        if (messages[i]?.id !== newMessages[i]?.id) {
+                            hasNewMessages = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (hasNewMessages) {
+                    // Update the messages array
+                    messages = newMessages;
+                    
+                    // Only redisplay if not silent (to avoid flickering)
+                    if (!silent) {
+                        displayMessages();
+                    }
+                    
+                    // Update DM list to show new messages
+                    if (currentDM) {
+                        loadActiveDMs();
+                    }
+                    
+                    // Play notification sound for new messages from others
+                    if (!silent) {
+                        const lastMessage = newMessages[newMessages.length - 1];
+                        if (lastMessage && lastMessage.sender !== currentUser) {
+                            playNotificationSound();
+                        }
+                    }
+                }
+            } else {
+                console.error('Error loading messages for room:', room, 'Error:', data.message);
+                if (!silent) {
+                    addSystemMessage('Error loading messages: ' + data.message);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading messages for room:', room, 'Error:', error);
+            if (!silent) {
+                addSystemMessage('Error loading messages. Please try again.');
+            }
+        });
+}
+
+// Display messages
+function displayMessages() {
+    const chatMessages = document.getElementById('chat-messages');
+    chatMessages.innerHTML = '';
+    
+    if (messages.length === 0) {
+        addSystemMessage('No messages yet. Start the conversation!');
+        return;
+    }
+    
+    messages.forEach(msg => {
+        addMessage(msg.sender, msg.content, msg.is_own, msg.date_sent, msg.id);
+    });
+    
+    // Scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Start real-time updates
+function startRealTimeUpdates() {
+    // Update online users every 30 seconds
+    setInterval(loadOnlineUsers, 30000);
+    
+    // Update messages every 5 seconds for current room (more frequent for better responsiveness)
+    setInterval(() => {
+        if (currentDM) {
+            // Get the room name from the URL parameter for DMs
+            const urlParams = new URLSearchParams(window.location.search);
+            const room = urlParams.get('room');
+            if (room) {
+                loadMessages(room, true); // silent update
+            }
+        } else if (currentRoom) {
+            loadMessages(currentRoom, true); // silent update
+        }
+    }, 5000);
+    
+    // Also check for new messages when user becomes active
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            // User became active, check for new messages
+            if (currentDM) {
+                // Get the room name from the URL parameter for DMs
+                const urlParams = new URLSearchParams(window.location.search);
+                const room = urlParams.get('room');
+                if (room) {
+                    loadMessages(room, true);
+                }
+            } else if (currentRoom) {
+                loadMessages(currentRoom, true);
+            }
+        }
+    });
+}
+
+// Load online users and active DMs
+function loadOnlineUsers() {
+    // Get all online users from the server
+    fetch('/get_online_users')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayOnlineUsers(data.users);
+                // Only load active DMs if we're in a DM
+                if (currentDM) {
+                    loadActiveDMs();
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading online users:', error);
+            // Fallback to just showing current user
+            displayOnlineUsers([{ username: currentUser, status: 'online' }]);
+            // Only load active DMs if we're in a DM
+            if (currentDM) {
+                loadActiveDMs();
+            }
+        });
+}
+
+// Display online users
+function displayOnlineUsers(users) {
+    const onlineMembers = document.getElementById('online-members');
+    
+    if (!onlineMembers) {
+        console.log('online-members element not found, skipping displayOnlineUsers');
+        return;
+    }
+    
+    let html = '';
+    users.forEach(user => {
+        html += `
+            <div class="member-item ${user.status}">
+                <div class="member-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="member-info">
+                    <span class="member-name">${user.username}</span>
+                    <span class="member-status">${user.status}</span>
+                </div>
+            </div>
+        `;
+    });
+    
+    onlineMembers.innerHTML = html;
+    
+    const onlineCount = document.getElementById('online-count');
+    if (onlineCount) {
+        onlineCount.textContent = `${users.length} online`;
+    }
+}
+
+// Load active DMs
+function loadActiveDMs() {
+    const dmList = document.getElementById('dm-list');
+    
+    if (!dmList) {
+        console.log('dm-list element not found, skipping loadActiveDMs');
+        return;
+    }
+    
+    console.log('Loading active DMs...');
+    
+    // Get all DMs from the database
+    fetch('/get_active_dms')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.dms.length > 0) {
+                console.log('Found DMs:', data.dms);
+                let html = '';
+                data.dms.forEach(dm => {
+                    const isActive = currentDM === dm.username;
+                    const avatarUrl = dm.avatar || '/static/images/default-avatar.png';
+                    html += `
+                        <div class="dm-item ${isActive ? 'active' : ''}" onclick="startDM('${dm.username}')">
+                            <div class="dm-avatar">
+                                <img src="${avatarUrl}" alt="${dm.username}" onerror="this.src='/static/images/default-avatar.png'">
+                            </div>
+                            <div class="dm-info">
+                                <span class="dm-name">${dm.username}</span>
+                                <span class="dm-status">${dm.last_message ? 'Last message: ' + dm.last_message.substring(0, 30) + '...' : 'No messages yet'}</span>
+                            </div>
+                            <div class="dm-indicator">
+                                <i class="fas fa-circle ${dm.has_unread ? 'unread' : ''}"></i>
+                            </div>
+                        </div>
+                    `;
+                });
+                dmList.innerHTML = html;
+            } else {
+                console.log('No DMs found');
+                dmList.innerHTML = '<div class="no-dms">No DMs yet. Start a conversation!</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading DMs:', error);
+            dmList.innerHTML = '<div class="no-dms">Error loading DMs</div>';
+        });
+}
+
+// Search users for DM
+function searchUsers(query) {
+    if (query.length < 2) {
+        document.getElementById('search-results').innerHTML = '';
+        return;
+    }
+    
+    fetch(`/get_user_suggestions?q=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displaySearchResults(data.users);
+            } else {
+                console.error('Search failed:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Search error:', error);
+        });
+}
+
+// Display search results
+function displaySearchResults(users) {
+    const searchResults = document.getElementById('search-results');
+    
+    if (users.length === 0) {
+        searchResults.innerHTML = '<div class="no-results">No users found</div>';
+        return;
+    }
+    
+    let html = '';
+    users.forEach(user => {
+        const avatarUrl = user.avatar || '/static/images/default-avatar.png';
+        html += `
+            <div class="search-result-item" onclick="startDM('${user.username}')">
+                <div class="user-avatar">
+                    <img src="${avatarUrl}" alt="${user.username}" onerror="this.src='/static/images/default-avatar.png'">
+                </div>
+                <div class="user-info">
+                    <span class="username">${user.username}</span>
+                    <span class="user-bio">${user.bio || 'Violinist'}</span>
+                </div>
+                <div class="start-chat-btn">
+                    <i class="fas fa-comment"></i>
+                </div>
+            </div>
+        `;
+    });
+    
+    searchResults.innerHTML = html;
+    searchResults.style.display = 'block';
+}
+
+// Modal functions
+function openSearchModal() {
+    document.getElementById('search-modal').style.display = 'block';
+}
+
+function closeSearchModal() {
+    document.getElementById('search-modal').style.display = 'none';
+}
+
+function openSettingsModal() {
+    document.getElementById('settings-modal').style.display = 'block';
+}
+
+function closeSettingsModal() {
+    document.getElementById('settings-modal').style.display = 'none';
+}
+
+function openAdminModal() {
+    document.getElementById('admin-modal').style.display = 'block';
+}
+
+function closeAdminModal() {
+    document.getElementById('admin-modal').style.display = 'none';
+}
+
+// Settings functions
+function loadSettings() {
+    const saved = localStorage.getItem('chatSettings');
+    if (saved) {
+        try {
+            const settings = JSON.parse(saved);
+            // Update UI with saved settings
+            if (document.getElementById('sound-notifications')) {
+                document.getElementById('sound-notifications').checked = settings.soundNotifications || false;
+            }
+            if (document.getElementById('desktop-notifications')) {
+                document.getElementById('desktop-notifications').checked = settings.desktopNotifications || false;
+            }
+            if (document.getElementById('compact-mode')) {
+                document.getElementById('compact-mode').checked = settings.compactMode || false;
+            }
+            if (document.getElementById('show-timestamps')) {
+                document.getElementById('show-timestamps').checked = settings.showTimestamps || true;
+            }
+            if (document.getElementById('show-online-status')) {
+                document.getElementById('show-online-status').checked = settings.showOnlineStatus || true;
+            }
+        } catch (e) {
+            console.error('Error loading settings:', e);
+        }
+    }
+}
+
+function saveSettings() {
+    const settings = {
+        soundNotifications: document.getElementById('sound-notifications')?.checked || false,
+        desktopNotifications: document.getElementById('desktop-notifications')?.checked || false,
+        compactMode: document.getElementById('compact-mode')?.checked || false,
+        showTimestamps: document.getElementById('show-timestamps')?.checked || true,
+        showOnlineStatus: document.getElementById('show-online-status')?.checked || true
+    };
+    
+    localStorage.setItem('chatSettings', JSON.stringify(settings));
+    closeSettingsModal();
+    showMessage('Settings saved successfully!', 'success');
+}
+
+// Admin functions
+function clearAllMessages() {
+    if (confirm('Are you sure you want to clear all messages? This action cannot be undone.')) {
+        // Make API call to clear messages
+        fetch('/admin/clear_messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('chat-messages').innerHTML = '';
+                showMessage('All messages cleared', 'success');
+            } else {
+                showMessage('Error clearing messages: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showMessage('Error clearing messages', 'error');
+        });
+        
+        closeAdminModal();
+    }
+}
+
+function muteUser() {
+    const username = prompt('Enter username to mute:');
+    if (username) {
+        // Make API call to mute user
+        showMessage(`User ${username} muted`, 'success');
+    }
+}
+
+function banUser() {
+    const username = prompt('Enter username to ban:');
+    if (username) {
+        // Make API call to ban user
+        showMessage(`User ${username} banned`, 'success');
+    }
+}
+
+function viewUserLogs() {
+    showMessage('User logs feature coming soon', 'info');
+}
+
+// Utility functions
+function viewUserProfile(username) {
+    window.open(`/profile/${username}`, '_blank');
+}
+
+function editMessage(messageId) {
+    const messageContent = document.querySelector(`.message-item[data-message-id="${messageId}"]`).querySelector('.message-content');
+    const currentText = messageContent.textContent;
+    
+    const newText = prompt('Edit message:', currentText);
+    if (newText && newText !== currentText) {
+        messageContent.textContent = newText;
+        showMessage('Message edited successfully!', 'success');
+    }
+}
+
+function deleteMessage(messageId) {
+    if (confirm('Are you sure you want to delete this message?')) {
+        // Implement message deletion via AJAX
+        fetch(`/delete_message/${messageId}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('Message deleted successfully!', 'success');
+                    // Reload messages to reflect deletion
+                    if (currentDM) {
+                        loadMessages(currentDM);
+                    } else {
+                        loadMessages(currentRoom);
+                    }
+                } else {
+                    showMessage('Error deleting message: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('Error deleting message: ' + error.message, 'error');
+            });
+    }
+}
+
+function searchMessages() {
+    const query = document.getElementById('message-search').value;
+    if (!query) return;
+    
+    const results = messages.filter(msg => 
+        msg.content.toLowerCase().includes(query.toLowerCase()) ||
+        msg.sender.toLowerCase().includes(query.toLowerCase())
+    );
+    
+    displaySearchResults(results);
+}
+
+// Play notification sound
+function playNotificationSound() {
+    // Create a simple notification sound
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+    oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+    
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.2);
+}
+
+// Check for new messages from other users
+function checkForNewMessages() {
+    if (currentDM) {
+        const room = `dm_${currentUser}_${currentDM}`;
+        loadMessages(room, true);
+    } else if (currentRoom) {
+        loadMessages(currentRoom, true);
+    }
+}
+
+// Show message function
+function showMessage(message, type) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message message-${type}`;
+    messageDiv.textContent = message;
+    messageDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        z-index: 1001;
+        animation: slideIn 0.3s ease;
+        background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8'};
+    `;
+    
+    document.body.appendChild(messageDiv);
+    
+    setTimeout(() => {
+        messageDiv.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => messageDiv.remove(), 300);
+    }, 3000);
+}
+
+// Toggle emoji picker
+function toggleEmojiPicker() {
+    const picker = document.getElementById('emoji-picker');
+    const attachmentMenu = document.getElementById('attachment-menu');
+    
+    if (picker.style.display === 'block') {
+        picker.style.display = 'none';
+    } else {
+        picker.style.display = 'block';
+        attachmentMenu.style.display = 'none';
+        loadEmojis();
+    }
+}
+
+// Load emojis
+function loadEmojis() {
+    const emojiContainer = document.getElementById('emoji-list');
+    if (!emojiContainer) {
+        console.error('Emoji container not found');
+        return;
+    }
+    
+    const emojis = ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🤗', '🤔', '🤭', '🤫', '🤥', '😶', '😐', '😑', '😯', '😦', '😧', '😮', '😲', '🥱', '😴', '🤤', '😪', '😵', '🤐', '🥴', '🤢', '🤮', '🤧', '😷', '🤒', '🤕', '🤑', '🤠', '🎻', '🎼', '🎵', '🎶', '🎤', '🎧', '🎺', '🎷', '🎸', '🎹', '🥁', '🎯', '🎲', '🎮', '🎰', '🎳', '🎨', '🎬', '🎭', '🎪', '🎟️', '🎫', '🎗️', '🎖️', '🏆', '🏅', '🥇', '🥈', '🥉', '🎊', '🎉', '🎈', '🎂', '🎁', '🎄', '🎃'];
+    
+    emojiContainer.innerHTML = '';
+    emojis.forEach(emoji => {
+        const emojiSpan = document.createElement('span');
+        emojiSpan.className = 'emoji';
+        emojiSpan.textContent = emoji;
+        emojiSpan.onclick = () => insertEmoji(emoji);
+        emojiContainer.appendChild(emojiSpan);
+    });
+}
+
+// Insert emoji into message input
+function insertEmoji(emoji) {
+    const messageInput = document.getElementById('message-input');
+    messageInput.value += emoji;
+    messageInput.focus();
+    
+    // Hide emoji picker
+    document.getElementById('emoji-picker').style.display = 'none';
+}
+
+// Toggle attachment menu
+function toggleAttachmentMenu() {
+    const menu = document.getElementById('attachment-menu');
+    const emojiPicker = document.getElementById('emoji-picker');
+    
+    if (!menu) {
+        console.error('Attachment menu not found');
+        return;
+    }
+    
+    if (menu.style.display === 'block') {
+        menu.style.display = 'none';
+    } else {
+        menu.style.display = 'block';
+        if (emojiPicker) {
+            emojiPicker.style.display = 'none';
+        }
+    }
+}
+
+// Add image link
+function addImageLink() {
+    const url = prompt('Enter image URL:');
+    if (url && url.trim()) {
+        const messageInput = document.getElementById('message-input');
+        messageInput.value += ` ![Image](${url})`;
+        messageInput.focus();
+        document.getElementById('attachment-menu').style.display = 'none';
+    }
+}
+
+// Add YouTube link
+function addYouTubeLink() {
+    const url = prompt('Enter YouTube URL:');
+    if (url && url.trim()) {
+        const messageInput = document.getElementById('message-input');
+        messageInput.value += ` 🎥 [YouTube](${url})`;
+        messageInput.focus();
+        document.getElementById('attachment-menu').style.display = 'none';
+    }
+}
+
+// Add Spotify link
+function addSpotifyLink() {
+    const url = prompt('Enter Spotify URL:');
+    if (url && url.trim()) {
+        const messageInput = document.getElementById('message-input');
+        messageInput.value += ` 🎵 [Spotify](${url})`;
+        messageInput.focus();
+        document.getElementById('attachment-menu').style.display = 'none';
+    }
+}
+
+// Add sheet music link
+function addSheetMusicLink() {
+    const url = prompt('Enter sheet music URL:');
+    if (url && url.trim()) {
+        const messageInput = document.getElementById('message-input');
+        messageInput.value += ` 📜 [Sheet Music](${url})`;
+        messageInput.focus();
+        document.getElementById('attachment-menu').style.display = 'none';
+    }
+}
+
+// Close emoji picker and attachment menu when clicking outside
+document.addEventListener('click', function(event) {
+    const emojiPicker = document.getElementById('emoji-picker');
+    const attachmentMenu = document.getElementById('attachment-menu');
+    
+    if (emojiPicker && !event.target.closest('.emoji-picker') && !event.target.closest('#emoji-btn')) {
+        emojiPicker.style.display = 'none';
+    }
+    
+    if (attachmentMenu && !event.target.closest('.attachment-menu') && !event.target.closest('#attach-btn')) {
+        attachmentMenu.style.display = 'none';
+    }
+});
+</script>
+{% endblock %}

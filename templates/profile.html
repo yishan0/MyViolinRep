@@ -1,0 +1,1272 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.username }}'s Profile - MyViolinRep{% endblock %}
+
+{% block content %}
+<!-- Profile Header -->
+<section class="profile-header">
+    <div class="container">
+        <div class="profile-banner">
+            <div class="profile-avatar-section">
+                <div class="profile-avatar" id="profile-avatar">
+                    {% if user.avatar %}
+                        <img src="{{ user.avatar }}" alt="{{ user.username }}'s avatar">
+                    {% else %}
+                        <div class="avatar-placeholder">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    {% endif %}
+                    {% if current_user.id == user.id %}
+                        <div class="avatar-upload-overlay">
+                            <label for="avatar-upload" class="upload-btn">
+                                <i class="fas fa-camera"></i>
+                            </label>
+                            <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="profile-info">
+                <div class="profile-header-main">
+                    <h1 class="profile-name" id="profile-name">{{ user.username }}</h1>
+                    <div class="profile-actions">
+                        {% if current_user.id == user.id %}
+                            <button class="edit-profile-btn" onclick="toggleEditMode()">
+                                <i class="fas fa-edit"></i> Edit Profile
+                            </button>
+                        {% else %}
+                            <button class="start-chat-btn" onclick="startChatWithUser('{{ user.username }}')">
+                                <i class="fas fa-comments"></i> Start Chat
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if user.bio %}
+                    <p class="profile-bio" id="profile-bio">{{ user.bio }}</p>
+                {% endif %}
+                
+                <div class="profile-meta">
+                    {% if user.country %}
+                        <span class="meta-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span id="profile-country">{{ user.country }}</span>
+                        </span>
+                    {% endif %}
+                    
+                    {% if user.currently_practicing %}
+                        <span class="meta-item">
+                            <i class="fas fa-music"></i>
+                            <span id="profile-practicing">{{ user.currently_practicing }}</span>
+                        </span>
+                    {% endif %}
+                    
+                    <span class="meta-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Joined {{ user.join_date.strftime('%B %Y') }}</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Profile Stats -->
+<section class="profile-stats">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="stat-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number" data-target="{{ user.contribution_score }}">0</div>
+                    <div class="stat-label">Contribution Score</div>
+                </div>
+            </div>
+            
+            <div class="stat-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="stat-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number" data-target="{{ user.forum_score }}">0</div>
+                    <div class="stat-label">Forum Score</div>
+                </div>
+            </div>
+            
+            <div class="stat-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="stat-icon">
+                    <i class="fas fa-music"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number" data-target="{{ user_pieces|length }}">0</div>
+                    <div class="stat-label">Pieces Submitted</div>
+                </div>
+            </div>
+            
+            <div class="stat-card" data-aos="fade-up" data-aos-delay="400">
+                <div class="stat-icon">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number" data-target="{{ user_favorites|length }}">0</div>
+                    <div class="stat-label">Favorites</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Profile Content Tabs -->
+<section class="profile-content">
+    <div class="container">
+        <div class="tabs-container">
+            <div class="tabs-header">
+                <button class="tab-btn active" data-tab="repertoire">
+                    <i class="fas fa-music"></i> My Repertoire
+                </button>
+                <button class="tab-btn" data-tab="ratings">
+                    <i class="fas fa-star"></i> My Ratings
+                </button>
+                <button class="tab-btn" data-tab="comments">
+                    <i class="fas fa-comments"></i> My Comments
+                </button>
+                <button class="tab-btn" data-tab="activity">
+                    <i class="fas fa-chart-line"></i> Activity
+                </button>
+            </div>
+            
+            <div class="tab-content active" id="repertoire-tab">
+                <div class="content-header">
+                    <h3>My Repertoire</h3>
+                    <p>Pieces you've submitted and rated</p>
+                </div>
+                
+                {% if user_pieces or user_ratings %}
+                    <div class="pieces-grid">
+                        {% for piece in user_pieces %}
+                            <div class="piece-card-mini" data-aos="fade-up">
+                                <div class="piece-cover-mini">
+                                    {% if piece.cover_image %}
+                                        <img src="{{ piece.cover_image }}" alt="{{ piece.title }}">
+                                    {% else %}
+                                        <div class="piece-cover-placeholder-mini">
+                                            <i class="fas fa-music"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="piece-info-mini">
+                                    <h4>{{ piece.title }}</h4>
+                                    <p>{{ piece.composer }}</p>
+                                    <div class="piece-meta-mini">
+                                        <span class="piece-era">{{ piece.era }}</span>
+                                        <span class="piece-genre">{{ piece.genre }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        
+                        {% for rating in user_ratings %}
+                            {% if rating.piece not in user_pieces %}
+                                <div class="piece-card-mini" data-aos="fade-up">
+                                    <div class="piece-cover-mini">
+                                        {% if rating.piece.cover_image %}
+                                            <img src="{{ rating.piece.cover_image }}" alt="{{ rating.piece.title }}">
+                                        {% else %}
+                                            <div class="piece-cover-placeholder-mini">
+                                                <i class="fas fa-music"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="piece-info-mini">
+                                        <h4>{{ rating.piece.title }}</h4>
+                                        <p>{{ rating.piece.composer }}</p>
+                                        <div class="piece-meta-mini">
+                                            <span class="piece-era">{{ rating.piece.era }}</span>
+                                            <span class="piece-genre">{{ rating.piece.genre }}</span>
+                                        </div>
+                                        <div class="rating-badge">
+                                            Rated: {{ rating.difficulty_rating }}/10
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-music"></i>
+                        </div>
+                        <h4>No repertoire yet</h4>
+                        <p>Start building your repertoire by rating pieces or submitting new ones!</p>
+                        <a href="{{ url_for('library') }}" class="btn btn-primary">Browse Pieces</a>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="tab-content" id="ratings-tab">
+                <div class="content-header">
+                    <h3>My Ratings</h3>
+                    <p>All the pieces you've rated</p>
+                </div>
+                
+                {% if user_ratings %}
+                    <div class="ratings-list">
+                        {% for rating in user_ratings %}
+                            <div class="rating-item" data-aos="fade-up">
+                                <div class="rating-piece-info">
+                                    <h4>{{ rating.piece.title }}</h4>
+                                    <p>{{ rating.piece.composer }} • {{ rating.piece.era }}</p>
+                                </div>
+                                <div class="rating-display">
+                                    <div class="rating-stars-display">
+                                        {% for i in range(1, 11) %}
+                                            <i class="fas fa-star {% if i <= rating.difficulty_rating %}filled{% endif %}"></i>
+                                        {% endfor %}
+                                    </div>
+                                    <span class="rating-score">{{ rating.difficulty_rating }}/10</span>
+                                </div>
+                                <div class="rating-date">
+                                    {{ rating.date_rated.strftime('%B %d, %Y') }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <h4>No ratings yet</h4>
+                        <p>Start rating pieces to build your repertoire profile!</p>
+                        <a href="{{ url_for('library') }}" class="btn btn-primary">Rate Pieces</a>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="tab-content" id="comments-tab">
+                <div class="content-header">
+                    <h3>My Comments</h3>
+                    <p>Your contributions to community discussions</p>
+                </div>
+                
+                {% if user_comments %}
+                    <div class="comments-list">
+                        {% for comment in user_comments %}
+                            <div class="comment-item" data-aos="fade-up">
+                                <div class="comment-header">
+                                    <h4>{{ comment.piece.title }}</h4>
+                                    <span class="comment-date">{{ comment.date_posted.strftime('%B %d, %Y') }}</span>
+                                </div>
+                                <div class="comment-content">
+                                    <p>{{ comment.content }}</p>
+                                </div>
+                                <div class="comment-actions">
+                                    <a href="{{ url_for('piece_detail', piece_id=comment.piece.id) }}" class="btn btn-outline btn-sm">
+                                        View Piece
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <h4>No comments yet</h4>
+                        <p>Join the discussion by commenting on pieces!</p>
+                        <a href="{{ url_for('library') }}" class="btn btn-primary">Browse Pieces</a>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="tab-content" id="activity-tab">
+                <div class="content-header">
+                    <h3>Recent Activity</h3>
+                    <p>Your latest contributions and interactions</p>
+                </div>
+                
+                <div class="activity-timeline">
+                    <div class="timeline-item" data-aos="fade-up">
+                        <div class="timeline-icon">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h4>Joined MyViolinRep</h4>
+                            <p>Welcome to the community!</p>
+                            <span class="timeline-date">{{ user.join_date.strftime('%B %d, %Y') }}</span>
+                        </div>
+                    </div>
+                    
+                    {% if user_pieces %}
+                        <div class="timeline-item" data-aos="fade-up">
+                            <div class="timeline-icon">
+                                <i class="fas fa-plus-circle"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h4>Submitted first piece</h4>
+                                <p>{{ user_pieces[0].title }} by {{ user_pieces[0].composer }}</p>
+                                <span class="timeline-date">{{ user_pieces[0].date_added.strftime('%B %d, %Y') }}</span>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if user_ratings %}
+                        <div class="timeline-item" data-aos="fade-up">
+                            <div class="timeline-icon">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h4>Rated first piece</h4>
+                                <p>{{ user_ratings[0].piece.title }} - {{ user_ratings[0].difficulty_rating }}/10</p>
+                                <span class="timeline-date">{{ user_ratings[0].date_rated.strftime('%B %d, %Y') }}</span>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Edit Profile Modal -->
+<div id="edit-profile-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Edit Profile</h3>
+            <button class="close-modal" onclick="closeEditModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="edit-profile-form">
+                <div class="form-group">
+                    <label for="edit-username">Username</label>
+                    <input type="text" id="edit-username" name="username" value="{{ user.username }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-bio">Bio</label>
+                    <textarea id="edit-bio" name="bio" rows="3" placeholder="Tell us about yourself...">{{ user.bio or '' }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-country">Country</label>
+                    <input type="text" id="edit-country" name="country" value="{{ user.country or '' }}" placeholder="Where are you from?">
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-practicing">Currently Practicing</label>
+                    <input type="text" id="edit-practicing" name="currently_practicing" value="{{ user.currently_practicing or '' }}" placeholder="What are you working on?">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.profile-header {
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    color: white;
+    padding: 4rem 0;
+    text-align: center;
+}
+
+.profile-header .container {
+    position: relative;
+    z-index: 2;
+}
+
+.profile-banner {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 3rem;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.profile-avatar-section {
+    position: relative;
+}
+
+.profile-avatar {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 6px solid rgba(255, 255, 255, 0.3);
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.profile-avatar:hover {
+    transform: scale(1.05);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.avatar-upload-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.profile-avatar:hover .avatar-upload-overlay {
+    opacity: 1;
+}
+
+.upload-btn {
+    background: rgba(255, 255, 255, 0.9);
+    color: #8B0000;
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.upload-btn:hover {
+    background: white;
+    transform: scale(1.1);
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.profile-header-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.start-chat-btn {
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 15px rgba(139, 0, 0, 0.3);
+}
+
+.start-chat-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 0, 0, 0.4);
+}
+
+.profile-name {
+    font-size: 3rem;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.edit-profile-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.edit-profile-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: white;
+    transform: translateY(-2px);
+}
+
+.profile-bio {
+    font-size: 1.25rem;
+    line-height: 1.6;
+    margin: 0;
+    opacity: 0.9;
+}
+
+.profile-meta {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1rem;
+    opacity: 0.8;
+}
+
+.meta-item i {
+    color: #DAA520;
+}
+
+.profile-stats {
+    padding: 4rem 0;
+    background: #f8f9fa;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.stat-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+}
+
+.stat-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    color: white;
+}
+
+.stat-number {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #8B0000;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.profile-content {
+    padding: 4rem 0;
+    background: white;
+}
+
+.tabs-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.tabs-header {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 3rem;
+    border-bottom: 2px solid #e9ecef;
+    overflow-x: auto;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 1rem 2rem;
+    cursor: pointer;
+    font-size: 1rem;
+    color: #6c757d;
+    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.tab-btn:hover {
+    color: #8B0000;
+}
+
+.tab-btn.active {
+    color: #8B0000;
+    border-bottom-color: #8B0000;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.content-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.content-header h3 {
+    font-size: 2rem;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.content-header p {
+    color: #6c757d;
+    font-size: 1.125rem;
+    margin: 0;
+}
+
+.pieces-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.piece-card-mini {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.piece-card-mini:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.piece-cover-mini {
+    height: 150px;
+    overflow: hidden;
+}
+
+.piece-cover-mini img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.piece-cover-placeholder-mini {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+}
+
+.piece-info-mini {
+    padding: 1.5rem;
+}
+
+.piece-info-mini h4 {
+    margin: 0 0 0.5rem 0;
+    color: #2c3e50;
+    font-size: 1.125rem;
+}
+
+.piece-info-mini p {
+    margin: 0 0 1rem 0;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.piece-meta-mini {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.piece-era, .piece-genre {
+    background: #f8f9fa;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.rating-badge {
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.empty-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    font-size: 2rem;
+    color: white;
+}
+
+.empty-state h4 {
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+}
+
+.empty-state p {
+    color: #6c757d;
+    margin: 0 0 2rem 0;
+    line-height: 1.6;
+}
+
+.ratings-list, .comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.rating-item, .comment-item {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.rating-item:hover, .comment-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.rating-piece-info h4, .comment-header h4 {
+    margin: 0 0 0.5rem 0;
+    color: #2c3e50;
+}
+
+.rating-piece-info p, .comment-date {
+    color: #6c757d;
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.rating-display {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.rating-stars-display {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.rating-stars-display i {
+    color: #e9ecef;
+    font-size: 1rem;
+}
+
+.rating-stars-display i.filled {
+    color: #DAA520;
+}
+
+.rating-score {
+    font-weight: 700;
+    color: #8B0000;
+    font-size: 1.125rem;
+}
+
+.rating-date {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.comment-content p {
+    margin: 1rem 0;
+    line-height: 1.6;
+    color: #2c3e50;
+}
+
+.comment-actions {
+    margin-top: 1rem;
+}
+
+.activity-timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.activity-timeline::before {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 2rem;
+    padding-left: 2rem;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -1.5rem;
+    top: 0.5rem;
+    width: 1rem;
+    height: 1rem;
+    background: #8B0000;
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 0 0 3px #e9ecef;
+}
+
+.timeline-icon {
+    position: absolute;
+    left: -2rem;
+    top: 0;
+    width: 2rem;
+    height: 2rem;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8B0000;
+    font-size: 1rem;
+}
+
+.timeline-content {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e9ecef;
+}
+
+.timeline-content h4 {
+    margin: 0 0 0.5rem 0;
+    color: #2c3e50;
+}
+
+.timeline-content p {
+    margin: 0 0 0.5rem 0;
+    color: #6c757d;
+}
+
+.timeline-date {
+    color: #8B0000;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 16px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.close-modal:hover {
+    background: #f8f9fa;
+    color: #8B0000;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.5rem 2rem;
+    border-top: 1px solid #e9ecef;
+    background: #f8f9fa;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #8B0000;
+}
+
+@media (max-width: 768px) {
+    .profile-banner {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 2rem;
+    }
+    
+    .profile-avatar {
+        width: 150px;
+        height: 150px;
+        margin: 0 auto;
+    }
+    
+    .profile-name {
+        font-size: 2rem;
+    }
+    
+    .profile-header-main {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .tabs-header {
+        flex-wrap: wrap;
+    }
+    
+    .tab-btn {
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .pieces-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Tab switching functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const targetTab = this.getAttribute('data-tab');
+            
+            // Remove active class from all tabs and contents
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+            
+            // Add active class to clicked tab and target content
+            this.classList.add('active');
+            document.getElementById(targetTab + '-tab').classList.add('active');
+        });
+    });
+    
+    // Animate stat numbers
+    animateStatNumbers();
+});
+
+// Animate stat numbers
+function animateStatNumbers() {
+    const statNumbers = document.querySelectorAll('.stat-number');
+    
+    statNumbers.forEach(stat => {
+        const target = parseInt(stat.getAttribute('data-target'));
+        const duration = 2000; // 2 seconds
+        const increment = target / (duration / 16); // 60fps
+        let current = 0;
+        
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            stat.textContent = Math.floor(current);
+        }, 16);
+    });
+}
+
+// Avatar upload functionality
+document.getElementById('avatar-upload')?.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const formData = new FormData();
+        formData.append('avatar', file);
+        
+        fetch('/upload_avatar', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update avatar display
+                const avatar = document.getElementById('profile-avatar');
+                avatar.innerHTML = `<img src="${data.avatar}" alt="Profile avatar">`;
+                showMessage('Avatar updated successfully!', 'success');
+            } else {
+                showMessage('Error updating avatar: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showMessage('Error updating avatar: ' + error.message, 'error');
+        });
+    }
+});
+
+// Edit profile functionality
+function toggleEditMode() {
+    document.getElementById('edit-profile-modal').style.display = 'block';
+}
+
+function closeEditModal() {
+    document.getElementById('edit-profile-modal').style.display = 'none';
+}
+
+function saveProfile() {
+    const formData = {
+        username: document.getElementById('edit-username').value,
+        bio: document.getElementById('edit-bio').value,
+        country: document.getElementById('edit-country').value,
+        currently_practicing: document.getElementById('edit-practicing').value
+    };
+    
+    fetch('/update_profile', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update profile display
+            document.getElementById('profile-name').textContent = formData.username;
+            document.getElementById('profile-bio').textContent = formData.bio;
+            document.getElementById('profile-country').textContent = formData.country;
+            document.getElementById('profile-practicing').textContent = formData.currently_practicing;
+            
+            closeEditModal();
+            showMessage('Profile updated successfully!', 'success');
+        } else {
+            showMessage('Error updating profile: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('Error updating profile: ' + error.message, 'error');
+    });
+}
+
+// Start chat with user function
+function startChatWithUser(username) {
+    fetch(`/start_chat/${username}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Redirect to chat page with the specific room
+                window.location.href = `/chat?room=${data.room_name}`;
+            } else {
+                showMessage('Error: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error starting chat:', error);
+            showMessage('Error starting chat', 'error');
+        });
+}
+
+// Message display function
+function showMessage(message, type) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message message-${type}`;
+    messageDiv.textContent = message;
+    messageDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        z-index: 1001;
+        animation: slideIn 0.3s ease;
+        background: ${type === 'success' ? '#28a745' : '#dc3545'};
+    `;
+    
+    document.body.appendChild(messageDiv);
+    
+    setTimeout(() => {
+        messageDiv.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => messageDiv.remove(), 300);
+    }, 3000);
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('edit-profile-modal');
+    if (event.target === modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+    
+    .message.message-success, .message.message-error {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

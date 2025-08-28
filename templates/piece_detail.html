@@ -1,0 +1,1636 @@
+{% extends "base.html" %}
+
+{% block title %}{{ piece.title }} - MyViolinRep{% endblock %}
+
+{% block content %}
+<!-- Piece Header -->
+<section class="piece-header">
+    <div class="container">
+        <div class="piece-banner">
+            <div class="piece-cover-large">
+                {% if piece.cover_image %}
+                    <img src="{{ piece.cover_image }}" alt="{{ piece.title }}">
+                {% else %}
+                    <div class="piece-cover-placeholder-large">
+                        <i class="fas fa-music"></i>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="piece-info-main">
+                <div class="piece-meta-badges">
+                    <span class="meta-badge era">{{ piece.era }}</span>
+                    <span class="meta-badge genre">{{ piece.genre }}</span>
+                    {% if piece.opus %}
+                        <span class="meta-badge opus">{{ piece.opus }}</span>
+                    {% endif %}
+                </div>
+                
+                <h1 class="piece-title-large">{{ piece.title }}</h1>
+                <h2 class="piece-composer-large">{{ piece.composer }}</h2>
+                
+                {% if piece.length %}
+                    <p class="piece-length-large">{{ piece.length }}</p>
+                {% endif %}
+                
+                {% if piece.description %}
+                    <div class="piece-description">
+                        <p>{{ piece.description }}</p>
+                    </div>
+                {% endif %}
+                
+                <div class="piece-actions-main">
+                    {% if current_user.is_authenticated %}
+                        <button class="btn btn-outline" onclick="toggleFavorite({{ piece.id }})" id="favorite-btn">
+                            <i class="fas fa-heart {% if piece.id in current_user.favorites|map(attribute='piece_id')|list %}filled{% endif %}"></i>
+                            <span id="favorite-text">{% if piece.id in current_user.favorites|map(attribute='piece_id')|list %}Remove from Favorites{% else %}Add to Favorites{% endif %}</span>
+                        </button>
+                    {% endif %}
+                    
+                    {% if piece.recording_link %}
+                        <a href="{{ piece.recording_link }}" target="_blank" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Listen
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Difficulty Rating Section -->
+<section class="difficulty-section">
+    <div class="container">
+        <div class="difficulty-container">
+            <div class="difficulty-header">
+                <h2>Difficulty Rating</h2>
+                <p>Community consensus on the technical difficulty of this piece</p>
+            </div>
+            
+            <div class="difficulty-display-large">
+                <div class="difficulty-meter-large">
+                    <div class="difficulty-fill-large" style="width: {{ (piece.difficulty_avg / 10) * 100 }}%"></div>
+                </div>
+                <div class="difficulty-score-large">
+                    {% if piece.total_ratings > 0 %}
+                        <span class="score-number">{{ "%.1f"|format(piece.difficulty_avg) }}</span>
+                        <span class="score-label">/ 10</span>
+                    {% else %}
+                        <span class="score-number">No ratings yet</span>
+                    {% endif %}
+                </div>
+                <div class="rating-stats">
+                    <span class="total-ratings">{{ piece.total_ratings }} ratings</span>
+                    {% if piece.total_ratings > 0 %}
+                        <span class="difficulty-level">
+                            {% if piece.difficulty_avg >= 9 %}
+                                Virtuoso
+                            {% elif piece.difficulty_avg >= 8 %}
+                                Professional
+                            {% elif piece.difficulty_avg >= 7 %}
+                                Extremely Advanced
+                            {% elif piece.difficulty_avg >= 6 %}
+                                Advanced
+                            {% elif piece.difficulty_avg >= 5 %}
+                                Early Advanced
+                            {% elif piece.difficulty_avg >= 3 %}
+                                Intermediate
+                            {% elif piece.difficulty_avg >= 2 %}
+                                Developing
+                            {% else %}
+                                Beginner
+                            {% endif %}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if current_user.is_authenticated %}
+                <div class="user-rating-section">
+                    <p>Rate this piece:</p>
+                    <div class="rating-stars-large">
+                        {% for i in range(1, 11) %}
+                            <button class="star-btn-large" data-rating="{{ i }}" onclick="ratePiece({{ piece.id }}, {{ i }})">
+                                <i class="fas fa-star {% if user_rating and user_rating.difficulty_rating >= i %}filled{% endif %}"></i>
+                            </button>
+                        {% endfor %}
+                    </div>
+                    <span class="rating-value">{{ user_rating.difficulty_rating if user_rating else 'Not rated' }}</span>
+                </div>
+            {% else %}
+                <div class="login-prompt">
+                    <p><a href="{{ url_for('login') }}">Log in</a> to rate this piece and contribute to the community!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+
+
+<!-- Ratings History -->
+{% if piece.total_ratings > 0 %}
+<section class="ratings-history">
+    <div class="container">
+        <div class="section-header">
+            <h2>Community Ratings</h2>
+            <p>See how other violinists rated this piece</p>
+        </div>
+        
+        <div class="ratings-list">
+            {% for rating in piece.ratings %}
+                <div class="rating-item">
+                    <div class="rating-user">
+                        <a href="{{ url_for('profile', username=rating.user.username) }}" class="user-link">
+                            <i class="fas fa-user-circle"></i>
+                            <span class="username">{{ rating.user.username }}</span>
+                        </a>
+                    </div>
+                    <div class="rating-score">
+                        <div class="stars-display">
+                            {% for i in range(1, 11) %}
+                                <i class="fas fa-star {% if rating.difficulty_rating >= i %}filled{% endif %}"></i>
+                            {% endfor %}
+                        </div>
+                        <span class="rating-number">{{ rating.difficulty_rating }}/10</span>
+                    </div>
+                    <div class="rating-date">
+                        {{ rating.date_rated.strftime('%B %d, %Y') }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Technical Information -->
+<section class="technical-info">
+    <div class="container">
+        <div class="info-grid">
+            <div class="info-card">
+                <h3><i class="fas fa-tags"></i> Technical Tags</h3>
+                <div class="tags-container">
+                    {% if piece.technical_tags %}
+                        {% set tags = piece.technical_tags|from_json %}
+                        {% for tag in tags %}
+                            <span class="tech-tag">{{ tag }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <p class="no-tags">No technical tags available</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if piece.performance_links %}
+                <div class="info-card">
+                    <h3><i class="fas fa-video"></i> Recommended Performances</h3>
+                    <div class="performance-links">
+                        {% set links = piece.performance_links|from_json %}
+                        {% for link in links %}
+                            <a href="{{ link }}" target="_blank" class="performance-link">
+                                <i class="fas fa-external-link-alt"></i>
+                                <span>Performance {{ loop.index }}</span>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Community Discussion -->
+<section class="community-discussion">
+    <div class="container">
+        <div class="discussion-header">
+            <h2>Community Discussion</h2>
+            <p>Share tips, ask questions, and discuss this piece with fellow violinists</p>
+        </div>
+        
+        {% if current_user.is_authenticated %}
+            <div class="comment-form-container">
+                <form id="comment-form" class="comment-form">
+                    <div class="form-group">
+                        <label for="comment-content">Your Comment</label>
+                        <textarea id="comment-content" name="content" rows="4" placeholder="Share your thoughts, tips, or questions about this piece..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="comment-tags">Tags (optional)</label>
+                        <div class="tags-input">
+                            <div class="tags-container" id="comment-tags-container">
+                                <!-- Tags will be added here dynamically -->
+                            </div>
+                            <div class="tag-input-group">
+                                <input type="text" id="comment-tag-input" class="tag-input" placeholder="Add a tag (e.g., technique, interpretation)">
+                                <button type="button" class="add-tag-btn" onclick="addCommentTag()">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Post Comment
+                    </button>
+                </form>
+            </div>
+        {% else %}
+            <div class="login-prompt-large">
+                <p><a href="{{ url_for('login') }}">Log in</a> to join the discussion and share your thoughts!</p>
+            </div>
+        {% endif %}
+        
+        <div class="comments-section">
+            <h3>Comments ({{ comments|length }})</h3>
+            
+            {% if comments %}
+                <div class="comments-list" id="comments-list">
+                    {% for comment in comments %}
+                        <div class="comment-item" data-comment-id="{{ comment.id }}">
+                            <div class="comment-header">
+                                <div class="comment-author">
+                                    <a href="{{ url_for('profile', username=comment.user.username) }}" class="author-link">
+                                        <i class="fas fa-user-circle"></i>
+                                        <span class="author-name">{{ comment.user.username }}</span>
+                                    </a>
+                                    <span class="comment-date">{{ comment.date_posted.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                                </div>
+                                
+                                {% if current_user.is_authenticated and (current_user.id == comment.user_id or current_user.username == 'admin') %}
+                                    <div class="comment-actions">
+                                        {% if current_user.id == comment.user_id %}
+                                            <button class="action-btn edit-btn" onclick="editComment({{ comment.id }})" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        {% endif %}
+                                        <button class="action-btn delete-btn" onclick="deleteComment({{ comment.id }})" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="comment-content" id="comment-content-{{ comment.id }}">
+                                <p>{{ comment.content }}</p>
+                            </div>
+                            
+                            {% if comment.tags %}
+                                <div class="comment-tags">
+                                    {% set tags = comment.tags|from_json %}
+                                    {% for tag in tags %}
+                                        <span class="comment-tag">{{ tag }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            
+                            <div class="comment-footer">
+                                <button class="reply-btn" onclick="replyToComment({{ comment.id }})">
+                                    <i class="fas fa-reply"></i> Reply
+                                </button>
+                                {% if current_user.is_authenticated %}
+                                <button class="like-btn {{ 'liked' if user_likes[comment.id] else '' }}" 
+                                        onclick="likeComment({{ comment.id }})" 
+                                        id="like-btn-{{ comment.id }}">
+                                    <i class="fas fa-thumbs-up"></i> 
+                                    <span id="like-count-{{ comment.id }}">{{ comment_likes[comment.id] }}</span>
+                                </button>
+                                {% else %}
+                                <button class="like-btn disabled" title="Sign in to like comments">
+                                    <i class="fas fa-thumbs-up"></i> {{ comment_likes[comment.id] }}
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="no-comments">
+                    <div class="no-comments-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h4>No comments yet</h4>
+                    <p>Be the first to share your thoughts about this piece!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.piece-header {
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    color: white;
+    padding: 4rem 0;
+    text-align: center;
+}
+
+.piece-header .container {
+    position: relative;
+    z-index: 2;
+}
+
+.piece-banner {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 3rem;
+    align-items: start;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.piece-cover-large {
+    width: 300px;
+    height: 400px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
+}
+
+.piece-cover-large img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.piece-cover-placeholder-large {
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.piece-info-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.piece-meta-badges {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+    justify-content: center;
+}
+
+.meta-badge {
+    background: #8B0000;
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 25px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(139, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    width: 140px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.meta-badge::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.meta-badge:hover::before {
+    left: 100%;
+}
+
+.meta-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 0, 0, 0.4);
+}
+
+.meta-badge.era {
+    background: #8B0000;
+    border-color: rgba(139, 0, 0, 0.3);
+}
+
+.meta-badge.genre {
+    background: #2c3e50;
+    border-color: rgba(44, 62, 80, 0.3);
+}
+
+.meta-badge.opus {
+    background: #27ae60;
+    border-color: rgba(39, 174, 96, 0.3);
+}
+
+.meta-badge.era:hover {
+    box-shadow: 0 6px 20px rgba(139, 0, 0, 0.4);
+}
+
+.meta-badge.genre:hover {
+    box-shadow: 0 6px 20px rgba(44, 62, 80, 0.4);
+}
+
+.meta-badge.opus:hover {
+    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+}
+
+.piece-title-large {
+    font-size: 3rem;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.piece-composer-large {
+    font-size: 2rem;
+    margin: 0;
+    opacity: 0.9;
+    font-style: italic;
+}
+
+.piece-length-large {
+    font-size: 1.125rem;
+    margin: 0;
+    opacity: 0.8;
+}
+
+.piece-description {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1.5rem;
+    border-radius: 12px;
+    line-height: 1.6;
+}
+
+.piece-actions-main {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.difficulty-section {
+    padding: 4rem 0;
+    background: #f8f9fa;
+}
+
+.difficulty-container {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.difficulty-header h2 {
+    font-size: 2.5rem;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.difficulty-header p {
+    font-size: 1.125rem;
+    color: #6c757d;
+    margin-bottom: 3rem;
+}
+
+.difficulty-display-large {
+    margin-bottom: 3rem;
+}
+
+.difficulty-meter-large {
+    width: 100%;
+    height: 20px;
+    background: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.difficulty-fill-large {
+    height: 100%;
+    background: linear-gradient(90deg, #8B0000, #DAA520);
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+.difficulty-score-large {
+    margin-bottom: 1rem;
+}
+
+.score-number {
+    font-size: 4rem;
+    font-weight: 700;
+    color: #8B0000;
+}
+
+.score-label {
+    font-size: 2rem;
+    color: #6c757d;
+}
+
+.rating-stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    font-size: 1.125rem;
+    color: #6c757d;
+}
+
+.user-rating-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.user-rating-section p {
+    font-size: 1.125rem;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.rating-stars-large {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.star-btn-large {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    transition: transform 0.2s ease;
+}
+
+.star-btn-large:hover {
+    transform: scale(1.2);
+}
+
+.star-btn-large i {
+    font-size: 2rem;
+    color: #e9ecef;
+    transition: color 0.3s ease;
+}
+
+.star-btn-large i.filled {
+    color: #DAA520;
+}
+
+.rating-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #8B0000;
+}
+
+.login-prompt {
+    text-align: center;
+    padding: 2rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.login-prompt a {
+    color: #8B0000;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.login-prompt a:hover {
+    text-decoration: underline;
+}
+
+.technical-info {
+    padding: 4rem 0;
+    background: white;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.info-card {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 16px;
+    border-left: 4px solid #8B0000;
+}
+
+.info-card h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0 0 1.5rem 0;
+    color: #2c3e50;
+    font-size: 1.25rem;
+}
+
+.info-card h3 i {
+    color: #8B0000;
+}
+
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.tech-tag {
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.no-tags {
+    color: #6c757d;
+    font-style: italic;
+    margin: 0;
+}
+
+.performance-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.performance-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #2c3e50;
+    transition: all 0.3s ease;
+}
+
+.performance-link:hover {
+    background: #8B0000;
+    color: white;
+    transform: translateX(5px);
+}
+
+.community-discussion {
+    padding: 4rem 0;
+    background: #f8f9fa;
+}
+
+.discussion-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.discussion-header h2 {
+    font-size: 2.5rem;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.discussion-header p {
+    font-size: 1.125rem;
+    color: #6c757d;
+    margin: 0;
+}
+
+.comment-form-container {
+    max-width: 800px;
+    margin: 0 auto 3rem;
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.comment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.form-group textarea {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+    resize: vertical;
+    transition: border-color 0.3s ease;
+}
+
+.form-group textarea:focus {
+    outline: none;
+    border-color: #8B0000;
+}
+
+.tags-input {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 0.75rem;
+    background: white;
+}
+
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    min-height: 32px;
+}
+
+.tag-item {
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tag-item .remove-tag {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 0;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.tag-item .remove-tag:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.tag-input-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.tag-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 0.875rem;
+    padding: 0.25rem;
+}
+
+.add-tag-btn {
+    background: #8B0000;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+}
+
+.add-tag-btn:hover {
+    background: #DAA520;
+}
+
+.login-prompt-large {
+    text-align: center;
+    padding: 3rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    margin-bottom: 3rem;
+}
+
+.login-prompt-large p {
+    font-size: 1.25rem;
+    color: #6c757d;
+    margin: 0;
+}
+
+.login-prompt-large a {
+    color: #8B0000;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.login-prompt-large a:hover {
+    text-decoration: underline;
+}
+
+.comments-section {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.comments-section h3 {
+    font-size: 1.75rem;
+    color: #2c3e50;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.comment-item {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.comment-item:hover {
+    transform: translateY(-2px);
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.comment-author {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.author-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: #8B0000;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.author-link:hover {
+    color: #DAA520;
+}
+
+.author-link i {
+    font-size: 1.25rem;
+}
+
+.comment-date {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.comment-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.875rem;
+}
+
+.edit-btn {
+    color: #17a2b8;
+}
+
+.edit-btn:hover {
+    background: rgba(23, 162, 184, 0.1);
+}
+
+.delete-btn {
+    color: #dc3545;
+}
+
+.delete-btn:hover {
+    background: rgba(220, 53, 69, 0.1);
+}
+
+.comment-content {
+    margin-bottom: 1rem;
+}
+
+.comment-content p {
+    margin: 0;
+    line-height: 1.6;
+    color: #2c3e50;
+}
+
+.comment-tags {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.comment-tag {
+    background: #f8f9fa;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.comment-footer {
+    display: flex;
+    gap: 1rem;
+}
+
+.reply-btn, .like-btn {
+    background: none;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.875rem;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.reply-btn:hover, .like-btn:hover {
+    background: #f8f9fa;
+    color: #8B0000;
+}
+
+.no-comments {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.no-comments-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    font-size: 2rem;
+    color: white;
+}
+
+.no-comments h4 {
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+}
+
+.no-comments p {
+    color: #6c757d;
+    margin: 0;
+    line-height: 1.6;
+}
+
+.reply-form {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e9ecef;
+}
+
+.reply-input-container {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.reply-input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 0.9375rem;
+    resize: vertical;
+    min-height: 50px;
+    transition: border-color 0.3s ease;
+}
+
+.reply-input:focus {
+    outline: none;
+    border-color: #8B0000;
+}
+
+.reply-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.reply-actions .btn {
+    padding: 0.75rem 1.5rem;
+}
+
+.comment-reply {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e9ecef;
+}
+
+.reply-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.reply-author {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.reply-author .author-name {
+    font-weight: 600;
+    color: #8B0000;
+}
+
+.reply-date {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.reply-content p {
+    margin: 0;
+    line-height: 1.6;
+    color: #2c3e50;
+}
+
+.ratings-history {
+    padding: 4rem 0;
+    background: #f8f9fa;
+}
+
+.ratings-history .container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.ratings-history .section-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.ratings-history .section-header h2 {
+    font-size: 2.5rem;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.ratings-history .section-header p {
+    font-size: 1.125rem;
+    color: #6c757d;
+    margin: 0;
+}
+
+.ratings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.rating-item {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.rating-user {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.user-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: #8B0000;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.user-link:hover {
+    color: #DAA520;
+}
+
+.user-link i {
+    font-size: 1.25rem;
+}
+
+.rating-score {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.stars-display {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.rating-number {
+    font-size: 1.125rem;
+    color: #6c757d;
+}
+
+.rating-date {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+@media (max-width: 768px) {
+    .piece-banner {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 2rem;
+    }
+    
+    .piece-cover-large {
+        width: 100%;
+        max-width: 300px;
+        margin: 0 auto;
+    }
+    
+    .piece-title-large {
+        font-size: 2rem;
+    }
+    
+    .piece-composer-large {
+        font-size: 1.5rem;
+    }
+    
+    .difficulty-header h2 {
+        font-size: 2rem;
+    }
+    
+    .score-number {
+        font-size: 3rem;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .comment-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .comment-actions {
+        align-self: flex-end;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Comment tags functionality
+let commentTags = [];
+
+function addCommentTag() {
+    const input = document.getElementById('comment-tag-input');
+    const tag = input.value.trim();
+    
+    if (tag && !commentTags.includes(tag)) {
+        commentTags.push(tag);
+        renderCommentTags();
+        input.value = '';
+    }
+}
+
+function removeCommentTag(tagToRemove) {
+    commentTags = commentTags.filter(tag => tag !== tagToRemove);
+    renderCommentTags();
+}
+
+function renderCommentTags() {
+    const container = document.getElementById('comment-tags-container');
+    container.innerHTML = '';
+    
+    commentTags.forEach(tag => {
+        const tagElement = document.createElement('div');
+        tagElement.className = 'tag-item';
+        tagElement.innerHTML = `
+            ${tag}
+            <button class="remove-tag" onclick="removeCommentTag('${tag}')">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        container.appendChild(tagElement);
+    });
+}
+
+// Enter key to add tags
+document.getElementById('comment-tag-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        addCommentTag();
+    }
+});
+
+// Comment form submission
+document.getElementById('comment-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const content = document.getElementById('comment-content').value.trim();
+    if (!content) return;
+    
+    const commentData = {
+        piece_id: {{ piece.id }},
+        content: content,
+        tags: commentTags
+    };
+    
+    fetch('/add_comment', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(commentData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Clear form
+            document.getElementById('comment-content').value = '';
+            commentTags = [];
+            renderCommentTags();
+            
+            // Reload page to show new comment
+            location.reload();
+        } else {
+            alert('Error posting comment: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error posting comment: ' + error.message);
+    });
+});
+
+// Rating functionality
+function ratePiece(pieceId, rating) {
+    fetch('/rate_piece', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ piece_id: pieceId, rating: rating })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update the difficulty display
+            const difficultyFill = document.querySelector('.difficulty-fill-large');
+            const scoreNumber = document.querySelector('.score-number');
+            const totalRatings = document.querySelector('.total-ratings');
+            
+            difficultyFill.style.width = (data.new_average / 10) * 100 + '%';
+            scoreNumber.textContent = data.new_average.toFixed(1);
+            
+            // Update star colors
+            const stars = document.querySelectorAll('.star-btn-large i');
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('filled');
+                } else {
+                    star.classList.remove('filled');
+                }
+            });
+            
+            // Update rating value
+            const ratingValue = document.querySelector('.rating-value');
+            ratingValue.textContent = rating;
+            
+            showMessage('Rating submitted successfully!', 'success');
+        } else {
+            showMessage('Error submitting rating: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('Error submitting rating: ' + error.message, 'error');
+    });
+}
+
+// Favorite functionality
+function toggleFavorite(pieceId) {
+    fetch('/favorite_piece', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ piece_id: pieceId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const favoriteBtn = document.getElementById('favorite-btn');
+            const heartIcon = favoriteBtn.querySelector('i');
+            const favoriteText = document.getElementById('favorite-text');
+            
+            if (data.action === 'added') {
+                heartIcon.classList.add('filled');
+                favoriteText.textContent = 'Remove from Favorites';
+                showMessage('Added to favorites!', 'success');
+            } else {
+                heartIcon.classList.remove('filled');
+                favoriteText.textContent = 'Add to Favorites';
+                showMessage('Removed from favorites!', 'success');
+            }
+        } else {
+            showMessage('Error updating favorites: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('Error updating favorites: ' + error.message, 'error');
+    });
+}
+
+// Comment editing
+function editComment(commentId) {
+    const commentContent = document.getElementById(`comment-content-${commentId}`);
+    const currentText = commentContent.querySelector('p').textContent;
+    
+    const newText = prompt('Edit your comment:', currentText);
+    if (newText && newText !== currentText) {
+        fetch(`/edit_comment/${commentId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ content: newText, tags: [] })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                commentContent.querySelector('p').textContent = newText;
+                showMessage('Comment edited successfully!', 'success');
+            } else {
+                showMessage('Error editing comment: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showMessage('Error editing comment: ' + error.message, 'error');
+        });
+    }
+}
+
+// Comment deletion
+function deleteComment(commentId) {
+    if (confirm('Are you sure you want to delete this comment? This action cannot be undone.')) {
+        fetch(`/delete_comment/${commentId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const commentItem = document.querySelector(`[data-comment-id="${commentId}"]`);
+                commentItem.remove();
+                showMessage('Comment deleted successfully!', 'success');
+            } else {
+                showMessage('Error deleting comment: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showMessage('Error deleting comment: ' + error.message, 'error');
+        });
+    }
+}
+
+// Reply to comment
+function replyToComment(commentId) {
+    const commentItem = document.querySelector(`[data-comment-id="${commentId}"]`);
+    const author = commentItem.querySelector('.author-name').textContent;
+    
+    // Check if reply form already exists
+    let existingReplyForm = commentItem.querySelector('.reply-form');
+    if (existingReplyForm) {
+        existingReplyForm.remove();
+        return;
+    }
+    
+    // Create reply form
+    const replyForm = document.createElement('div');
+    replyForm.className = 'reply-form';
+    replyForm.innerHTML = `
+        <div class="reply-input-container">
+            <textarea class="reply-input" placeholder="Reply to ${author}..." rows="2"></textarea>
+            <div class="reply-actions">
+                <button class="btn btn-primary btn-sm" onclick="submitReply(${commentId})">Reply</button>
+                <button class="btn btn-outline btn-sm" onclick="cancelReply(${commentId})">Cancel</button>
+            </div>
+        </div>
+    `;
+    
+    // Insert reply form after the comment footer
+    const commentFooter = commentItem.querySelector('.comment-footer');
+    commentFooter.parentNode.insertBefore(replyForm, commentFooter.nextSibling);
+    
+    // Focus on reply input
+    const replyInput = replyForm.querySelector('.reply-input');
+    replyInput.focus();
+}
+
+function submitReply(commentId) {
+    const commentItem = document.querySelector(`[data-comment-id="${commentId}"]`);
+    const replyInput = commentItem.querySelector('.reply-input');
+    const replyText = replyInput.value.trim();
+    
+    if (!replyText) {
+        showMessage('Please enter a reply', 'error');
+        return;
+    }
+    
+    // Create reply element
+    const replyElement = document.createElement('div');
+    replyElement.className = 'comment-reply';
+    replyElement.innerHTML = `
+        <div class="reply-header">
+            <div class="reply-author">
+                <i class="fas fa-reply"></i>
+                <span class="author-name">{{ current_user.username }}</span>
+                <span class="reply-date">Just now</span>
+            </div>
+        </div>
+        <div class="reply-content">
+            <p>${replyText}</p>
+        </div>
+    `;
+    
+    // Insert reply after the reply form
+    const replyForm = commentItem.querySelector('.reply-form');
+    replyForm.parentNode.insertBefore(replyElement, replyForm.nextSibling);
+    
+    // Remove reply form
+    replyForm.remove();
+    
+    // Clear input
+    replyInput.value = '';
+    
+    showMessage('Reply posted successfully!', 'success');
+}
+
+function cancelReply(commentId) {
+    const commentItem = document.querySelector(`[data-comment-id="${commentId}"]`);
+    const replyForm = commentItem.querySelector('.reply-form');
+    if (replyForm) {
+        replyForm.remove();
+    }
+}
+
+// Like comment
+function likeComment(commentId) {
+    const likeBtn = document.getElementById(`like-btn-${commentId}`);
+    const likeCount = document.getElementById(`like-count-${commentId}`);
+    
+    fetch('/like_comment', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            comment_id: commentId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update the button state
+            if (data.action === 'liked') {
+                likeBtn.classList.add('liked');
+                showMessage('Comment liked!', 'success');
+            } else {
+                likeBtn.classList.remove('liked');
+                showMessage('Like removed.', 'info');
+            }
+            
+            // Update the like count
+            likeCount.textContent = data.like_count;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showMessage('Error updating like', 'error');
+    });
+}
+
+// Message display function
+function showMessage(message, type) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message message-${type}`;
+    messageDiv.textContent = message;
+    messageDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        z-index: 1001;
+        animation: slideIn 0.3s ease;
+        background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8'};
+    `;
+    
+    document.body.appendChild(messageDiv);
+    
+    setTimeout(() => {
+        messageDiv.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => messageDiv.remove(), 300);
+    }, 3000);
+}
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+    
+    .message.message-success, .message.message-error, .message.message-info {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .like-btn.liked {
+        color: #8B0000 !important;
+    }
+    
+
+`;
+document.head.appendChild(style);
+
+
+</script>
+{% endblock %}

@@ -1,0 +1,750 @@
+{% extends "base.html" %}
+
+{% block title %}Leaderboard - MyViolinRep{% endblock %}
+
+{% block content %}
+<!-- Leaderboard Header -->
+<section class="leaderboard-header">
+    <div class="container">
+        <div class="header-content">
+            <h1 class="page-title">Community Leaderboard</h1>
+            <p class="page-subtitle">Celebrating our most active and helpful community members</p>
+        </div>
+    </div>
+</section>
+
+<!-- Leaderboard Navigation -->
+<section class="leaderboard-nav">
+    <div class="container">
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="showTab('contributors')">
+                <i class="fas fa-trophy"></i>
+                Top Contributors
+            </button>
+            <button class="tab-btn" onclick="showTab('forum')">
+                <i class="fas fa-comments"></i>
+                Most Helpful
+            </button>
+            <button class="tab-btn" onclick="showTab('practice')">
+                <i class="fas fa-music"></i>
+                Practice Masters
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Top Contributors Tab -->
+<section class="leaderboard-section active" id="contributors-tab">
+    <div class="container">
+        <div class="section-header">
+            <h2><i class="fas fa-trophy"></i> Top Contributors</h2>
+            <p>Members who have submitted the most repertoire pieces</p>
+        </div>
+        
+        <div class="leaderboard-grid">
+            {% for user in top_contributors %}
+            <div class="leaderboard-card" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+                <div class="rank-badge rank-{{ loop.index }}">
+                    {{ loop.index }}
+                </div>
+                
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <h3>{{ user.username }}</h3>
+                        <p class="user-score">{{ user.contribution_score }} points</p>
+                        <div class="user-badges">
+                            {% if user.contribution_score >= 100 %}
+                                <span class="badge gold">Gold Contributor</span>
+                            {% elif user.contribution_score >= 50 %}
+                                <span class="badge silver">Silver Contributor</span>
+                            {% elif user.contribution_score >= 20 %}
+                                <span class="badge bronze">Bronze Contributor</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="user-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Pieces</span>
+                        <span class="stat-value">{{ user.submissions|length }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Member Since</span>
+                        <span class="stat-value">{{ user.join_date.strftime('%b %Y') }}</span>
+                    </div>
+                </div>
+                
+                <div class="user-actions">
+                    <a href="{{ url_for('profile', username=user.username) }}" class="btn btn-outline btn-sm">
+                        <i class="fas fa-user"></i>
+                        View Profile
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Most Helpful Tab -->
+<section class="leaderboard-section" id="forum-tab">
+    <div class="container">
+        <div class="section-header">
+            <h2><i class="fas fa-comments"></i> Most Helpful</h2>
+            <p>Members with the most upvoted forum posts and comments</p>
+        </div>
+        
+        <div class="leaderboard-grid">
+            {% for user in top_forum_users %}
+            <div class="leaderboard-card" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+                <div class="rank-badge rank-{{ loop.index }}">
+                    {{ loop.index }}
+                </div>
+                
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <h3>{{ user.username }}</h3>
+                        <p class="user-score">{{ user.forum_score }} points</p>
+                        <div class="user-badges">
+                            {% if user.forum_score >= 100 %}
+                                <span class="badge gold">Virtuoso Commentator</span>
+                            {% elif user.forum_score >= 50 %}
+                                <span class="badge silver">Helpful Member</span>
+                            {% elif user.forum_score >= 20 %}
+                                <span class="badge bronze">Active Participant</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="user-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Comments</span>
+                        <span class="stat-value">{{ user.comments|length }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Upvotes</span>
+                        <span class="stat-value">{{ user.forum_score }}</span>
+                    </div>
+                </div>
+                
+                <div class="user-actions">
+                    <a href="{{ url_for('profile', username=user.username) }}" class="btn btn-outline btn-sm">
+                        <i class="fas fa-user"></i>
+                        View Profile
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Practice Masters Tab -->
+<section class="leaderboard-section" id="practice-tab">
+    <div class="container">
+        <div class="section-header">
+            <h2><i class="fas fa-music"></i> Practice Masters</h2>
+            <p>Members who share their practice journey and inspire others</p>
+        </div>
+        
+        <div class="leaderboard-grid">
+            <!-- This would be populated with practice-related metrics -->
+            <div class="leaderboard-card placeholder-card" data-aos="fade-up">
+                <div class="placeholder-content">
+                    <i class="fas fa-music"></i>
+                    <h3>Practice tracking coming soon!</h3>
+                    <p>Track your practice sessions and compete with fellow violinists</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Monthly Reset Info -->
+<section class="reset-info">
+    <div class="container">
+        <div class="info-card">
+            <div class="info-icon">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="info-content">
+                <h3>Monthly Leaderboards</h3>
+                <p>Leaderboards reset each month to keep competition fresh and give everyone a chance to shine!</p>
+                <div class="next-reset">
+                    <span class="reset-label">Next reset:</span>
+                    <span class="reset-date">January 1, 2025</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How to Earn Points -->
+<section class="points-guide">
+    <div class="container">
+        <h2>How to Earn Points</h2>
+        
+        <div class="points-grid">
+            <div class="point-card">
+                <div class="point-icon">
+                    <i class="fas fa-plus-circle"></i>
+                </div>
+                <h3>Submit Repertoire</h3>
+                <p class="point-value">+10 points per approved piece</p>
+                <p>Share your favorite violin pieces with the community</p>
+            </div>
+            
+            <div class="point-card">
+                <div class="point-icon">
+                    <i class="fas fa-comment"></i>
+                </div>
+                <h3>Helpful Comments</h3>
+                <p class="point-value">+1 point per upvote</p>
+                <p>Share tips, answer questions, and help fellow violinists</p>
+            </div>
+            
+            <div class="point-card">
+                <div class="point-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <h3>Rate Pieces</h3>
+                <p class="point-value">+1 point per rating</p>
+                <p>Contribute to the difficulty rating system</p>
+            </div>
+            
+            <div class="point-card">
+                <div class="point-icon">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <h3>Daily Activity</h3>
+                <p class="point-value">+1 point per day</p>
+                <p>Stay active and engaged with the community</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<style>
+.leaderboard-header {
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    color: white;
+    padding: 4rem 0;
+    text-align: center;
+}
+
+.leaderboard-header .container {
+    position: relative;
+    z-index: 2;
+}
+
+.page-title {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.page-subtitle {
+    font-size: 1.25rem;
+    opacity: 0.9;
+}
+
+.leaderboard-nav {
+    background: white;
+    padding: 2rem 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.nav-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    background: none;
+    border: 2px solid #e9ecef;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tab-btn:hover {
+    border-color: #8B0000;
+    color: #8B0000;
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    border-color: transparent;
+    color: white;
+}
+
+.leaderboard-section {
+    display: none;
+    padding: 4rem 0;
+}
+
+.leaderboard-section.active {
+    display: block;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.section-header h2 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.section-header h2 i {
+    color: #8B0000;
+}
+
+.section-header p {
+    color: #6c757d;
+    font-size: 1.125rem;
+    margin: 0;
+}
+
+.leaderboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.leaderboard-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e9ecef;
+    position: relative;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.leaderboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.rank-badge {
+    position: absolute;
+    top: -15px;
+    left: 2rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: white;
+}
+
+.rank-1 {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    box-shadow: 0 4px 20px rgba(255, 215, 0, 0.4);
+}
+
+.rank-2 {
+    background: linear-gradient(135deg, #C0C0C0, #A9A9A9);
+    box-shadow: 0 4px 20px rgba(192, 192, 192, 0.4);
+}
+
+.rank-3 {
+    background: linear-gradient(135deg, #CD7F32, #A0522D);
+    box-shadow: 0 4px 20px rgba(205, 127, 50, 0.4);
+}
+
+.rank-4, .rank-5 {
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    box-shadow: 0 4px 20px rgba(139, 0, 0, 0.4);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.user-avatar {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.user-details h3 {
+    margin: 0 0 0.5rem 0;
+    color: #2c3e50;
+    font-size: 1.5rem;
+}
+
+.user-score {
+    color: #8B0000;
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin: 0 0 1rem 0;
+}
+
+.user-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge.gold {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #8B4513;
+}
+
+.badge.silver {
+    background: linear-gradient(135deg, #C0C0C0, #A9A9A9);
+    color: #2c3e50;
+}
+
+.badge.bronze {
+    background: linear-gradient(135deg, #CD7F32, #A0522D);
+    color: white;
+}
+
+.user-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-top: 1px solid #e9ecef;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 0.25rem;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.user-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.placeholder-card {
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+}
+
+.placeholder-content i {
+    font-size: 4rem;
+    color: #6c757d;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.placeholder-content h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.placeholder-content p {
+    color: #6c757d;
+    margin: 0;
+}
+
+.reset-info {
+    padding: 4rem 0;
+    background: #f8f9fa;
+}
+
+.info-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.info-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.info-content h3 {
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+}
+
+.info-content p {
+    color: #6c757d;
+    margin: 0 0 1rem 0;
+    line-height: 1.6;
+}
+
+.next-reset {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.reset-label {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.reset-date {
+    color: #8B0000;
+    font-weight: 700;
+}
+
+.points-guide {
+    padding: 4rem 0;
+    background: white;
+}
+
+.points-guide h2 {
+    text-align: center;
+    margin-bottom: 3rem;
+    color: #2c3e50;
+}
+
+.points-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.point-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e9ecef;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.point-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.point-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    color: white;
+}
+
+.point-card h3 {
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+}
+
+.point-value {
+    color: #8B0000;
+    font-weight: 700;
+    font-size: 1.125rem;
+    margin: 0 0 1rem 0;
+}
+
+.point-card p:last-child {
+    color: #6c757d;
+    margin: 0;
+    line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 2rem;
+    }
+    
+    .nav-tabs {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .tab-btn {
+        width: 100%;
+        max-width: 300px;
+        justify-content: center;
+    }
+    
+    .leaderboard-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .leaderboard-card {
+        padding: 1.5rem;
+    }
+    
+    .user-info {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .info-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .points-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+    AOS.init({
+        duration: 800,
+        once: true,
+        offset: 50
+    });
+
+    function showTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.leaderboard-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        
+        // Remove active class from all tab buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Show selected tab
+        document.getElementById(tabName + '-tab').classList.add('active');
+        
+        // Add active class to clicked button
+        event.target.classList.add('active');
+    }
+
+    // Add hover effects to leaderboard cards
+    document.querySelectorAll('.leaderboard-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px) scale(1.02)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+
+    // Animate rank badges on scroll
+    const observerOptions = {
+        threshold: 0.5,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const rankBadge = entry.target.querySelector('.rank-badge');
+                if (rankBadge) {
+                    rankBadge.style.animation = 'rankPulse 0.6s ease';
+                }
+            }
+        });
+    }, observerOptions);
+    
+    document.querySelectorAll('.leaderboard-card').forEach(card => {
+        observer.observe(card);
+    });
+
+    // Add rank pulse animation
+    if (!document.querySelector('#rank-animations')) {
+        const style = document.createElement('style');
+        style.id = 'rank-animations';
+        style.textContent = `
+            @keyframes rankPulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+                100% { transform: scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+</script>
+{% endblock %}

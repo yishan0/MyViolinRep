@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MyViolinRep - Violin Repertoire Community{% endblock %}</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-violin"></i>
+                <span>MyViolinRep</span>
+            </div>
+            
+            <div class="nav-menu">
+                <a href="{{ url_for('index') }}" class="nav-link">Home</a>
+                <a href="{{ url_for('library') }}" class="nav-link">Library</a>
+                <a href="{{ url_for('leaderboard') }}" class="nav-link">Leaderboard</a>
+                <a href="{{ url_for('chat') }}" class="nav-link">Chat</a>
+                
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('submit_piece') }}" class="nav-link">Submit Piece</a>
+                    
+                    <!-- Global Search Bar -->
+                    <div class="global-search">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="globalSearch" placeholder="Search" class="global-search-input">
+                        <div class="search-results" id="searchResults"></div>
+                    </div>
+                    
+                    <div class="user-menu">
+                        <button class="user-menu-btn">
+                            {% if current_user.avatar %}
+                                <img src="{{ current_user.avatar }}" alt="{{ current_user.username }}" class="user-avatar-nav">
+                            {% else %}
+                                <i class="fas fa-user-circle"></i>
+                            {% endif %}
+                            {{ current_user.username }}
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="user-dropdown">
+                            <a href="{{ url_for('profile', username=current_user.username) }}">Profile</a>
+                            {% if current_user.username == 'admin' %}
+                                <a href="{{ url_for('admin_pending') }}">Admin Panel</a>
+                            {% endif %}
+                            <a href="{{ url_for('logout') }}">Logout</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="nav-link">Login</a>
+                    <a href="{{ url_for('register') }}" class="nav-link register-btn">Register</a>
+                {% endif %}
+            </div>
+            
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>MyViolinRep</h3>
+                <p>Explore the repertoire. Rank the difficulty. Join the community.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <a href="{{ url_for('library') }}">Library</a>
+                <a href="{{ url_for('leaderboard') }}">Leaderboard</a>
+                <a href="{{ url_for('chat') }}">Community Chat</a>
+            </div>
+            <div class="footer-section">
+                <h4>Connect</h4>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 MyViolinRep. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+    
+    <!-- Global Search JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const globalSearch = document.getElementById('globalSearch');
+            const searchResults = document.getElementById('searchResults');
+            
+            if (globalSearch) {
+                let searchTimeout;
+                
+                globalSearch.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    const query = this.value.trim();
+                    
+                    if (query.length < 2) {
+                        searchResults.style.display = 'none';
+                        return;
+                    }
+                    
+                    searchTimeout = setTimeout(() => {
+                        performGlobalSearch(query);
+                    }, 300);
+                });
+                
+                // Hide results when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!globalSearch.contains(e.target) && !searchResults.contains(e.target)) {
+                        searchResults.style.display = 'none';
+                    }
+                });
+            }
+        });
+        
+        function performGlobalSearch(query) {
+            fetch(`/global_search?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displaySearchResults(data.pieces, data.users);
+                    }
+                })
+                .catch(error => console.error('Search error:', error));
+        }
+        
+        function displaySearchResults(pieces, users) {
+            const searchResults = document.getElementById('searchResults');
+            let html = '';
+            
+            // Display pieces
+            pieces.forEach(piece => {
+                html += `
+                    <div class="search-result-item" onclick="window.location.href='/piece/${piece.id}'">
+                        <i class="fas fa-music search-result-icon"></i>
+                        <div class="search-result-info">
+                            <h4>${piece.title}</h4>
+                            <p>${piece.composer} • ${piece.era} • ${piece.genre}</p>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // Display users
+            users.forEach(user => {
+                html += `
+                    <div class="search-result-item" onclick="window.location.href='/profile/${user.username}'">
+                        <img src="${user.avatar || '/static/images/default-avatar.png'}" alt="${user.username}" class="search-result-avatar">
+                        <div class="search-result-info">
+                            <h4>${user.username}</h4>
+                            <p>${user.bio ? user.bio.substring(0, 50) + '...' : 'Violinist'}</p>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            if (html === '') {
+                html = '<div class="search-result-item"><p>No results found</p></div>';
+            }
+            
+            searchResults.innerHTML = html;
+            searchResults.style.display = 'block';
+        }
+        
+
+        
+
+    </script>
+    
+    <!-- Floating Music Notes Animation -->
+    <div class="floating-notes">
+        <div class="note note-1">♪</div>
+        <div class="note note-2">♫</div>
+        <div class="note note-3">♩</div>
+        <div class="note note-4">♬</div>
+        <div class="note note-5">♪</div>
+    </div>
+</body>
+</html>

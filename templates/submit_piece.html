@@ -1,0 +1,1561 @@
+{% extends "base.html" %}
+
+{% block title %}Submit New Piece - MyViolinRep{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="submit-hero">
+    <div class="container">
+        <div class="hero-content" data-aos="fade-up">
+            <h1>Share Your Music</h1>
+            <p>Help build our repertoire library by submitting a new violin piece</p>
+            <div class="hero-decoration">
+                <i class="fas fa-music"></i>
+                <i class="fas fa-plus"></i>
+                <i class="fas fa-violin"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Submit Form Section -->
+<section class="submit-form-section">
+    <div class="container">
+        <div class="form-container" data-aos="fade-up" data-aos-delay="200">
+            <div class="form-header">
+                <h2>Piece Information</h2>
+                <p>Fill in the details below to submit your piece for review</p>
+            </div>
+            
+            <form id="piece-submission-form" class="piece-form">
+                <div class="form-grid">
+                    <!-- Basic Information -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-info-circle"></i>
+                            Basic Information
+                        </h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="title">Piece Title *</label>
+                                <input type="text" id="title" name="title" required placeholder="e.g., Violin Concerto No. 1">
+                                <div class="input-icon">
+                                    <i class="fas fa-music"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="composer">Composer *</label>
+                                <input type="text" id="composer" name="composer" required placeholder="e.g., Tchaikovsky">
+                                <div class="input-icon">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="era">Musical Era *</label>
+                                <select id="era" name="era" required class="styled-select">
+                                    <option value="">Select Era</option>
+                                    <option value="Baroque">Baroque (1600-1750)</option>
+                                    <option value="Classical">Classical (1750-1820)</option>
+                                    <option value="Romantic">Romantic (1820-1900)</option>
+                                    <option value="20th Century">20th Century (1900-2000)</option>
+                                    <option value="Contemporary">Contemporary (2000+)</option>
+                                </select>
+                                <div class="select-arrow">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="genre">Genre *</label>
+                                <select id="genre" name="genre" required class="styled-select">
+                                    <option value="">Select Genre</option>
+                                    <option value="Concerto">Concerto</option>
+                                    <option value="Sonata">Sonata</option>
+                                    <option value="Partita">Partita</option>
+                                    <option value="Suite">Suite</option>
+                                    <option value="Etude">Etude</option>
+                                    <option value="Caprice">Caprice</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                                <div class="select-arrow">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="opus">Opus/Catalogue Number</label>
+                                <input type="text" id="opus" name="opus" placeholder="e.g., Op. 35, BWV 1004">
+                                <div class="input-icon">
+                                    <i class="fas fa-hashtag"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="length">Approximate Length</label>
+                                <input type="text" id="length" name="length" placeholder="e.g., 25 minutes">
+                                <div class="input-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Description & Difficulty -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-align-left"></i>
+                            Description & Difficulty
+                        </h3>
+                        
+                        <div class="form-group full-width">
+                            <label for="description">Piece Description</label>
+                            <textarea id="description" name="description" rows="4" placeholder="Describe the piece, its style, notable features, and any interesting background information..."></textarea>
+                            <div class="textarea-icon">
+                                <i class="fas fa-pen"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="suggested_difficulty">Suggested Difficulty Level</label>
+                            <div class="difficulty-slider-container">
+                                <div class="difficulty-labels">
+                                    <span>Beginner</span>
+                                    <span>Intermediate</span>
+                                    <span>Advanced</span>
+                                    <span>Virtuoso</span>
+                                </div>
+                                <input type="range" id="suggested_difficulty" name="suggested_difficulty" min="1" max="10" value="5" class="difficulty-slider">
+                                <div class="slider-value">
+                                    <span id="difficulty-value">5</span>/10
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Technical Elements -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-cogs"></i>
+                            Technical Elements
+                        </h3>
+                        
+                        <div class="form-group full-width">
+                            <label>Technical Tags</label>
+                            <div class="tags-container">
+                                <div class="tags-input">
+                                    <input type="text" id="tag-input" placeholder="Type a technical element and press Enter...">
+                                    <button type="button" id="add-tag-btn" class="add-tag-btn">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <div class="tags-suggestions">
+                                    <span class="suggestion-label">Common tags:</span>
+                                    <div class="suggestion-tags">
+                                        <span class="suggestion-tag" data-tag="spiccato">spiccato</span>
+                                        <span class="suggestion-tag" data-tag="double stops">double stops</span>
+                                        <span class="suggestion-tag" data-tag="harmonics">harmonics</span>
+                                        <span class="suggestion-tag" data-tag="shifting">shifting</span>
+                                        <span class="suggestion-tag" data-tag="left-hand pizzicato">left-hand pizzicato</span>
+                                        <span class="suggestion-tag" data-tag="vibrato">vibrato</span>
+                                        <span class="suggestion-tag" data-tag="trills">trills</span>
+                                        <span class="suggestion-tag" data-tag="octaves">octaves</span>
+                                    </div>
+                                </div>
+                                <div id="selected-tags" class="selected-tags"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Media & Links -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-link"></i>
+                            Media & Links
+                        </h3>
+                        
+                        <div class="form-group full-width">
+                            <label for="recording_link">Recording Link</label>
+                            <input type="url" id="recording_link" name="recording_link" placeholder="https://www.youtube.com/watch?v=... or Spotify/Apple Music link">
+                            <div class="input-icon">
+                                <i class="fas fa-play-circle"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="performance_links">Performance Links (one per line)</label>
+                            <textarea id="performance_links" name="performance_links" rows="3" placeholder="Add links to notable performances, masterclasses, or sheet music..."></textarea>
+                            <div class="textarea-icon">
+                                <i class="fas fa-external-link-alt"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="cover_image">Cover Image</label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="cover_image" name="cover_image" accept="image/*" style="display: none;">
+                                <div class="file-upload-display" onclick="document.getElementById('cover_image').click();">
+                                    <div class="file-upload-content">
+                                        <i class="fas fa-image"></i>
+                                        <span class="file-upload-text">Click to upload image or drag & drop</span>
+                                        <span class="file-upload-formats">Supports: JPEG, PNG, GIF, WebP (max 5MB)</span>
+                                    </div>
+                                </div>
+                                <div class="file-preview" id="image-preview" style="display: none;">
+                                    <img id="preview-img" alt="Preview" />
+                                    <button type="button" class="remove-image" onclick="removeImage()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="previewPiece()">
+                        <i class="fas fa-eye"></i> Preview
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Submit Piece
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- Preview Modal -->
+<div id="preview-modal" class="modal">
+    <div class="modal-content preview-modal">
+        <div class="modal-header">
+            <h3>Piece Preview</h3>
+            <button class="close-modal" onclick="closePreviewModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div id="piece-preview" class="piece-preview">
+                <!-- Preview content will be inserted here -->
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closePreviewModal()">Close</button>
+            <button class="btn btn-primary" onclick="submitPiece()">Submit Piece</button>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div id="success-modal" class="modal">
+    <div class="modal-content success-modal">
+        <div class="modal-header">
+            <h3>Piece Submitted Successfully!</h3>
+            <button class="close-modal" onclick="closeSuccessModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="success-content">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h4>Thank you for your contribution!</h4>
+                <p>Your piece has been submitted and is now under review by our admin team. You'll receive a notification once it's approved and added to the library.</p>
+                <div class="success-actions">
+                    <a href="{{ url_for('library') }}" class="btn btn-primary">Browse Library</a>
+                    <a href="{{ url_for('submit_piece') }}" class="btn btn-outline">Submit Another</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.submit-hero {
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    color: white;
+    padding: 4rem 0;
+    text-align: center;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.hero-content h1 {
+    font-size: 3.5rem;
+    margin: 0 0 1rem 0;
+    font-weight: 700;
+}
+
+.hero-content p {
+    font-size: 1.25rem;
+    margin: 0 0 2rem 0;
+    opacity: 0.9;
+}
+
+.hero-decoration {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    font-size: 2rem;
+    opacity: 0.8;
+}
+
+.hero-decoration i {
+    animation: bounce 2s infinite;
+}
+
+.hero-decoration i:nth-child(2) {
+    animation-delay: 0.3s;
+}
+
+.hero-decoration i:nth-child(3) {
+    animation-delay: 0.6s;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-10px); }
+    60% { transform: translateY(-5px); }
+}
+
+.submit-form-section {
+    padding: 4rem 0;
+    background: #f8f9fa;
+}
+
+.form-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.form-header {
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+.form-header h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 2rem;
+}
+
+.form-header p {
+    margin: 0;
+    opacity: 0.9;
+}
+
+.piece-form {
+    padding: 2rem;
+}
+
+.form-grid {
+    display: grid;
+    gap: 2rem;
+}
+
+.form-section {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2.5rem;
+    border: 1px solid rgba(139, 0, 0, 0.1);
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 0 0 2rem 0;
+    color: #2c3e50;
+    font-size: 1.5rem;
+    font-weight: 700;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid rgba(139, 0, 0, 0.1);
+}
+
+.section-title i {
+    color: #8B0000;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-group {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.form-group i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #8B0000;
+    font-size: 1rem;
+    z-index: 2;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 1rem 1rem 1rem 2.75rem;
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    font-size: 1rem;
+    background: white;
+    color: #2c3e50;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    height: 3.5rem;
+    line-height: 1.5rem;
+    vertical-align: top;
+}
+
+.form-group textarea {
+    width: 100%;
+    padding: 1rem 1rem 1rem 2.75rem;
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    font-size: 1rem;
+    background: white;
+    color: #2c3e50;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    min-height: 6rem;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #8B0000;
+    box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.1);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: #6c757d;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-group input:hover,
+.form-group textarea:hover,
+.form-group select:hover {
+    border-color: #8B0000;
+    box-shadow: 0 4px 12px rgba(139, 0, 0, 0.1);
+}
+
+.input-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #8B0000;
+    font-size: 1rem;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+.textarea-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 1.25rem;
+    color: #8B0000;
+    font-size: 1rem;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+.form-group input:focus + .input-icon,
+.form-group select:focus + .input-icon {
+    opacity: 1;
+    color: #8B0000;
+    transform: translateY(-50%) scale(1.1);
+}
+
+.form-group textarea:focus + .textarea-icon {
+    opacity: 1;
+    color: #8B0000;
+    transform: scale(1.1);
+}
+
+
+
+/* File Upload Styles */
+.file-upload-wrapper {
+    position: relative;
+}
+
+.file-upload-display {
+    border: 2px dashed #e9ecef;
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #fafafa;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.file-upload-display:hover,
+.file-upload-display.drag-over {
+    border-color: #8B0000;
+    background: rgba(139, 0, 0, 0.02);
+}
+
+.file-upload-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.file-upload-content i {
+    font-size: 2rem;
+    color: #8B0000;
+    opacity: 0.7;
+}
+
+.file-upload-text {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1rem;
+}
+
+.file-upload-formats {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.file-preview {
+    position: relative;
+    margin-top: 1rem;
+    border-radius: 15px;
+    overflow: hidden;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.file-preview img {
+    width: 100%;
+    height: auto;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 15px;
+}
+
+.remove-image {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: rgba(220, 53, 69, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+}
+
+.remove-image:hover {
+    background: #dc3545;
+    transform: scale(1.1);
+}
+
+.styled-select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+
+.select-arrow {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    font-size: 0.875rem;
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+.form-group select:focus + .select-arrow {
+    color: #8B0000;
+}
+
+.form-group select:hover + .select-arrow {
+    color: #8B0000;
+}
+
+.difficulty-slider-container {
+    text-align: center;
+}
+
+.difficulty-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.difficulty-slider {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #e9ecef;
+    outline: none;
+    -webkit-appearance: none;
+    margin-bottom: 1rem;
+}
+
+.difficulty-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.difficulty-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.slider-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #8B0000;
+}
+
+.tags-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.tags-input {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.tags-input input {
+    flex: 1;
+    padding-left: 1rem;
+}
+
+.add-tag-btn {
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 50px;
+}
+
+.add-tag-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(139, 0, 0, 0.3);
+}
+
+.suggestion-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.suggestion-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.suggestion-tag {
+    background: #e9ecef;
+    color: #6c757d;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.suggestion-tag:hover {
+    background: #8B0000;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.selected-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    min-height: 2rem;
+}
+
+.tag {
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    animation: tagSlideIn 0.3s ease;
+}
+
+.tag .remove-tag {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 0;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.tag .remove-tag:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes tagSlideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.form-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.btn {
+    padding: 0.75rem 2rem;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    border: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    color: white;
+    border: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(139, 0, 0, 0.3);
+}
+
+.btn-outline {
+    background: transparent;
+    color: #8B0000;
+    border: 2px solid #8B0000;
+}
+
+.btn-outline:hover {
+    background: #8B0000;
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 16px 60px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.preview-modal {
+    max-width: 900px;
+}
+
+.success-modal {
+    max-width: 600px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e9ecef;
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    color: white;
+}
+
+.modal-header h3 {
+    margin: 0;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: white;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.close-modal:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.5rem 2rem;
+    border-top: 1px solid #e9ecef;
+    background: #f8f9fa;
+}
+
+.piece-preview {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.success-content {
+    text-align: center;
+    padding: 2rem 0;
+}
+
+.success-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    font-size: 2.5rem;
+    color: white;
+    animation: successPulse 2s infinite;
+}
+
+@keyframes successPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.success-content h4 {
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+    font-size: 1.5rem;
+}
+
+.success-content p {
+    color: #6c757d;
+    margin: 0 0 2rem 0;
+    line-height: 1.6;
+}
+
+.success-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .hero-content h1 {
+        font-size: 2.5rem;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn {
+        width: 100%;
+        max-width: 300px;
+        justify-content: center;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+    }
+    
+    .modal-header,
+    .modal-body,
+    .modal-footer {
+        padding: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let tags = [];
+let formData = {};
+
+// Initialize the form
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize difficulty slider
+    const difficultySlider = document.getElementById('suggested_difficulty');
+    const difficultyValue = document.getElementById('difficulty-value');
+    
+    difficultySlider.addEventListener('input', function() {
+        difficultyValue.textContent = this.value;
+    });
+    
+    // Initialize tag suggestions
+    initializeTagSuggestions();
+    
+    // Initialize form submission
+    initializeFormSubmission();
+    
+    // Initialize file upload
+    initializeFileUpload();
+});
+
+// Initialize tag suggestions
+function initializeTagSuggestions() {
+    const suggestionTags = document.querySelectorAll('.suggestion-tag');
+    suggestionTags.forEach(tag => {
+        tag.addEventListener('click', function() {
+            const tagText = this.getAttribute('data-tag');
+            addTag(tagText);
+        });
+    });
+    
+    // Initialize tag input
+    const tagInput = document.getElementById('tag-input');
+    const addTagBtn = document.getElementById('add-tag-btn');
+    
+    tagInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const tagText = this.value.trim();
+            if (tagText) {
+                addTag(tagText);
+                this.value = '';
+            }
+        }
+    });
+    
+    addTagBtn.addEventListener('click', function() {
+        const tagText = tagInput.value.trim();
+        if (tagText) {
+            addTag(tagText);
+            tagInput.value = '';
+        }
+    });
+}
+
+// Add a tag
+function addTag(tagText) {
+    if (tags.includes(tagText)) return;
+    
+    tags.push(tagText);
+    updateTagsDisplay();
+}
+
+// Remove a tag
+function removeTag(tagText) {
+    tags = tags.filter(tag => tag !== tagText);
+    updateTagsDisplay();
+}
+
+// Update tags display
+function updateTagsDisplay() {
+    const selectedTags = document.getElementById('selected-tags');
+    selectedTags.innerHTML = '';
+    
+    tags.forEach(tag => {
+        const tagElement = document.createElement('span');
+        tagElement.className = 'tag';
+        tagElement.innerHTML = `
+            ${tag}
+            <button class="remove-tag" onclick="removeTag('${tag}')">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        selectedTags.appendChild(tagElement);
+    });
+}
+
+// Initialize form submission
+function initializeFormSubmission() {
+    const form = document.getElementById('piece-submission-form');
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Collect form data directly for submission
+        const formDataObj = new FormData(form);
+        
+        // Collect form data
+        const data = {
+            title: formDataObj.get('title'),
+            composer: formDataObj.get('composer'),
+            era: formDataObj.get('era'),
+            genre: formDataObj.get('genre'),
+            opus: formDataObj.get('opus'),
+            length: formDataObj.get('length'),
+            description: formDataObj.get('description'),
+            suggested_difficulty: formDataObj.get('suggested_difficulty'),
+            recording_link: formDataObj.get('recording_link'),
+            performance_links: formDataObj.get('performance_links'),
+            cover_image: formDataObj.get('cover_image'),
+            technical_tags: tags
+        };
+        
+        // Validate required fields
+        if (!data.title || !data.composer || !data.era || !data.genre) {
+            showMessage('Please fill in all required fields.', 'error');
+            return;
+        }
+        
+        // Process performance links (split by newlines and filter empty ones)
+        if (data.performance_links) {
+            data.performance_links = data.performance_links.split('\n')
+                .map(link => link.trim())
+                .filter(link => link.length > 0);
+        } else {
+            data.performance_links = [];
+        }
+        
+        // Prepare form data for file upload
+        const formDataForUpload = new FormData();
+        
+        // Add all form fields
+        Object.keys(data).forEach(key => {
+            if (key === 'technical_tags') {
+                formDataForUpload.append(key, JSON.stringify(data[key]));
+            } else if (key === 'performance_links') {
+                formDataForUpload.append(key, JSON.stringify(data[key]));
+            } else {
+                formDataForUpload.append(key, data[key] || '');
+            }
+        });
+        
+        // Add file if selected
+        const fileInput = document.getElementById('cover_image');
+        if (fileInput.files[0]) {
+            formDataForUpload.append('cover_image', fileInput.files[0]);
+        }
+        
+        // Submit the piece with file upload support
+        fetch('/submit_piece', {
+            method: 'POST',
+            body: formDataForUpload
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccessModal();
+            } else {
+                showMessage('Error submitting piece: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showMessage('Error submitting piece: ' + error.message, 'error');
+        });
+    });
+}
+
+// Preview piece
+function previewPiece() {
+    const form = document.getElementById('piece-submission-form');
+    const formDataObj = new FormData(form);
+    
+    // Collect form data
+    const data = {
+        title: formDataObj.get('title'),
+        composer: formDataObj.get('composer'),
+        era: formDataObj.get('era'),
+        genre: formDataObj.get('genre'),
+        opus: formDataObj.get('opus'),
+        length: formDataObj.get('length'),
+        description: formDataObj.get('description'),
+        suggested_difficulty: formDataObj.get('suggested_difficulty'),
+        recording_link: formDataObj.get('recording_link'),
+        performance_links: formDataObj.get('performance_links'),
+        cover_image: formDataObj.get('cover_image'),
+        technical_tags: tags
+    };
+    
+    // Validate required fields
+    if (!data.title || !data.composer || !data.era || !data.genre) {
+        showMessage('Please fill in all required fields.', 'error');
+        return;
+    }
+    
+    // Process performance links for preview and storage
+    if (data.performance_links) {
+        data.performance_links = data.performance_links.split('\n')
+            .map(link => link.trim())
+            .filter(link => link.length > 0);
+    } else {
+        data.performance_links = [];
+    }
+    
+    // Store form data for submission
+    formData = data;
+    
+    // Generate preview
+    generatePreview(data);
+    
+    // Show preview modal
+    document.getElementById('preview-modal').style.display = 'block';
+}
+
+// Generate preview content
+function generatePreview(data) {
+    const preview = document.getElementById('piece-preview');
+    
+    preview.innerHTML = `
+        <div class="preview-header">
+            <h3>${data.title}</h3>
+            <p class="composer">by ${data.composer}</p>
+        </div>
+        
+        <div class="preview-details">
+            <div class="detail-row">
+                <span class="detail-label">Era:</span>
+                <span class="detail-value">${data.era}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Genre:</span>
+                <span class="detail-value">${data.genre}</span>
+            </div>
+            ${data.opus ? `<div class="detail-row">
+                <span class="detail-label">Opus:</span>
+                <span class="detail-value">${data.opus}</span>
+            </div>` : ''}
+            ${data.length ? `<div class="detail-row">
+                <span class="detail-label">Length:</span>
+                <span class="detail-value">${data.length}</span>
+            </div>` : ''}
+            ${data.suggested_difficulty ? `<div class="detail-row">
+                <span class="detail-label">Suggested Difficulty:</span>
+                <span class="detail-value">${data.suggested_difficulty}/10</span>
+            </div>` : ''}
+        </div>
+        
+        ${data.description ? `<div class="preview-description">
+            <h4>Description:</h4>
+            <p>${data.description}</p>
+        </div>` : ''}
+        
+        ${tags.length > 0 ? `<div class="preview-tags">
+            <h4>Technical Tags:</h4>
+            <div class="preview-tags-list">
+                ${tags.map(tag => `<span class="preview-tag">${tag}</span>`).join('')}
+            </div>
+        </div>` : ''}
+        
+        ${data.recording_link ? `<div class="preview-links">
+            <h4>Recording Link:</h4>
+            <p><a href="${data.recording_link}" target="_blank">${data.recording_link}</a></p>
+        </div>` : ''}
+        
+        ${data.performance_links && data.performance_links.length > 0 ? `<div class="preview-links">
+            <h4>Performance Links:</h4>
+            <p>${data.performance_links.map(link => 
+                `<a href="${link}" target="_blank">${link}</a><br>`
+            ).join('')}</p>
+        </div>` : ''}
+    `;
+}
+
+// Submit piece
+function submitPiece() {
+    if (!formData.title) {
+        showMessage('Please fill in the form first.', 'error');
+        return;
+    }
+    
+    // Add technical tags to form data
+    formData.technical_tags = tags;
+    
+    fetch('/submit_piece', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closePreviewModal();
+            showSuccessModal();
+        } else {
+            showMessage('Error submitting piece: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('Error submitting piece: ' + error.message, 'error');
+    });
+}
+
+// Close preview modal
+function closePreviewModal() {
+    document.getElementById('preview-modal').style.display = 'none';
+}
+
+// Show success modal
+function showSuccessModal() {
+    document.getElementById('success-modal').style.display = 'block';
+}
+
+// Close success modal
+function closeSuccessModal() {
+    document.getElementById('success-modal').style.display = 'none';
+    // Reset form
+    document.getElementById('piece-submission-form').reset();
+    tags = [];
+    updateTagsDisplay();
+    document.getElementById('difficulty-value').textContent = '5';
+}
+
+// Close modals when clicking outside
+window.onclick = function(event) {
+    const previewModal = document.getElementById('preview-modal');
+    const successModal = document.getElementById('success-modal');
+    
+    if (event.target === previewModal) {
+        previewModal.style.display = 'none';
+    }
+    
+    if (event.target === successModal) {
+        successModal.style.display = 'none';
+    }
+}
+
+// Message display function
+function showMessage(message, type) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message message-${type}`;
+    messageDiv.textContent = message;
+    messageDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        z-index: 1001;
+        animation: slideIn 0.3s ease;
+        background: ${type === 'success' ? '#28a745' : '#dc3545'};
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    `;
+    
+    document.body.appendChild(messageDiv);
+    
+    setTimeout(() => {
+        messageDiv.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => messageDiv.remove(), 300);
+    }, 3000);
+}
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+    
+    .preview-header h3 {
+        margin: 0 0 0.5rem 0;
+        color: #2c3e50;
+        font-size: 1.5rem;
+    }
+    
+    .preview-header .composer {
+        margin: 0 0 1.5rem 0;
+        color: #6c757d;
+        font-style: italic;
+    }
+    
+    .preview-details {
+        margin-bottom: 1.5rem;
+    }
+    
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .detail-label {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    .detail-value {
+        color: #6c757d;
+    }
+    
+    .preview-description,
+    .preview-tags,
+    .preview-links {
+        margin-bottom: 1.5rem;
+    }
+    
+    .preview-description h4,
+    .preview-tags h4,
+    .preview-links h4 {
+        margin: 0 0 0.5rem 0;
+        color: #2c3e50;
+        font-size: 1.125rem;
+    }
+    
+    .preview-description p {
+        margin: 0;
+        color: #6c757d;
+        line-height: 1.6;
+    }
+    
+    .preview-tags-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .preview-tag {
+        background: linear-gradient(135deg, #8B0000, #DAA520);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.875rem;
+    }
+    
+    .preview-links a {
+        color: #8B0000;
+        text-decoration: none;
+        word-break: break-all;
+    }
+    
+    .preview-links a:hover {
+        text-decoration: underline;
+    }
+`;
+document.head.appendChild(style);
+
+// Initialize file upload functionality
+function initializeFileUpload() {
+    const fileInput = document.getElementById('cover_image');
+    const uploadDisplay = document.querySelector('.file-upload-display');
+    const preview = document.getElementById('image-preview');
+    
+    // Handle file selection
+    fileInput.addEventListener('change', handleFileSelect);
+    
+    // Handle drag and drop
+    uploadDisplay.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadDisplay.classList.add('drag-over');
+    });
+    
+    uploadDisplay.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadDisplay.classList.remove('drag-over');
+    });
+    
+    uploadDisplay.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadDisplay.classList.remove('drag-over');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (file.type.startsWith('image/')) {
+                fileInput.files = files;
+                handleFileSelect({ target: fileInput });
+            } else {
+                showMessage('Please select an image file.', 'error');
+            }
+        }
+    });
+}
+
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+        showMessage('Please select an image file.', 'error');
+        return;
+    }
+    
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+        showMessage('File size must be less than 5MB.', 'error');
+        return;
+    }
+    
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const preview = document.getElementById('image-preview');
+        const previewImg = document.getElementById('preview-img');
+        const uploadDisplay = document.querySelector('.file-upload-display');
+        
+        previewImg.src = e.target.result;
+        preview.style.display = 'block';
+        uploadDisplay.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeImage() {
+    const fileInput = document.getElementById('cover_image');
+    const preview = document.getElementById('image-preview');
+    const uploadDisplay = document.querySelector('.file-upload-display');
+    
+    fileInput.value = '';
+    preview.style.display = 'none';
+    uploadDisplay.style.display = 'flex';
+}
+
+</script>
+{% endblock %}

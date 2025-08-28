@@ -1,0 +1,1270 @@
+{% extends "base.html" %}
+
+{% block title %}Repertoire Library - MyViolinRep{% endblock %}
+
+{% block content %}
+<!-- Library Header -->
+<section class="library-header">
+    <div class="container">
+        <div class="header-content">
+            <h1 class="page-title">Repertoire Library</h1>
+            <p class="page-subtitle">Discover and explore violin repertoire from all eras</p>
+        </div>
+    </div>
+</section>
+
+<!-- Search and Filters -->
+<section class="search-filters">
+    <div class="container">
+        <div class="filters-container">
+            <form class="filters-form" method="GET" action="{{ url_for('library') }}" id="filterForm">
+                <div class="search-group">
+                    <div class="search-input-wrapper">
+                        <i class="fas fa-search"></i>
+                        <input type="text" name="search" placeholder="Search pieces, composers..." value="{{ request.args.get('search', '') }}" class="search-input">
+                    </div>
+                </div>
+                
+                <div class="filters-row">
+                    <div class="filter-group">
+                        <label for="composer">Composer</label>
+                        <select name="composer" id="composer" class="filter-select">
+                            <option value="">All Composers</option>
+                            <option value="Bach" {{ 'selected' if request.args.get('composer') == 'Bach' }}>Bach</option>
+                            <option value="Beethoven" {{ 'selected' if request.args.get('composer') == 'Beethoven' }}>Beethoven</option>
+                            <option value="Brahms" {{ 'selected' if request.args.get('composer') == 'Brahms' }}>Brahms</option>
+                            <option value="Mozart" {{ 'selected' if request.args.get('composer') == 'Mozart' }}>Mozart</option>
+                            <option value="Paganini" {{ 'selected' if request.args.get('composer') == 'Paganini' }}>Paganini</option>
+                            <option value="Tchaikovsky" {{ 'selected' if request.args.get('composer') == 'Tchaikovsky' }}>Tchaikovsky</option>
+                            <option value="Vivaldi" {{ 'selected' if request.args.get('composer') == 'Vivaldi' }}>Vivaldi</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="era">Era</label>
+                        <select name="era" id="era" class="filter-select">
+                            <option value="">All Eras</option>
+                            <option value="Contemporary" {{ 'selected' if request.args.get('era') == 'Contemporary' }}>Contemporary</option>
+                            <option value="20th Century" {{ 'selected' if request.args.get('era') == '20th Century' }}>20th Century</option>
+                            <option value="Romantic" {{ 'selected' if request.args.get('era') == 'Romantic' }}>Romantic</option>
+                            <option value="Classical" {{ 'selected' if request.args.get('era') == 'Classical' }}>Classical</option>
+                            <option value="Baroque" {{ 'selected' if request.args.get('era') == 'Baroque' }}>Baroque</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="genre">Genre</label>
+                        <select name="genre" id="genre" class="filter-select">
+                            <option value="">All Genres</option>
+                            <option value="Concerto" {{ 'selected' if request.args.get('genre') == 'Concerto' }}>Concerto</option>
+                            <option value="Sonata" {{ 'selected' if request.args.get('genre') == 'Sonata' }}>Sonata</option>
+                            <option value="Partita" {{ 'selected' if request.args.get('genre') == 'Partita' }}>Partita</option>
+                            <option value="Suite" {{ 'selected' if request.args.get('genre') == 'Suite' }}>Suite</option>
+                            <option value="Etude" {{ 'selected' if request.args.get('genre') == 'Etude' }}>Etude</option>
+                            <option value="Caprice" {{ 'selected' if request.args.get('genre') == 'Caprice' }}>Caprice</option>
+                            <option value="Other" {{ 'selected' if request.args.get('genre') == 'Other' }}>Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="difficulty">Difficulty</label>
+                        <select name="difficulty" id="difficulty" class="filter-select">
+                            <option value="">All Levels</option>
+                            <option value="9-10" {{ 'selected' if request.args.get('difficulty') == '9-10' }}>Virtuoso (9-10)</option>
+                            <option value="8" {{ 'selected' if request.args.get('difficulty') == '8' }}>Professional (8)</option>
+                            <option value="7" {{ 'selected' if request.args.get('difficulty') == '7' }}>Extremely Advanced (7)</option>
+                            <option value="6" {{ 'selected' if request.args.get('difficulty') == '6' }}>Advanced (6)</option>
+                            <option value="5" {{ 'selected' if request.args.get('difficulty') == '5' }}>Early Advanced (5)</option>
+                            <option value="3-4" {{ 'selected' if request.args.get('difficulty') == '3-4' }}>Intermediate (3-4)</option>
+                            <option value="2" {{ 'selected' if request.args.get('difficulty') == '2' }}>Developing (2)</option>
+                            <option value="0-1" {{ 'selected' if request.args.get('difficulty') == '0-1' }}>Beginner (0-1)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary" id="applyFilters">
+                        <i class="fas fa-filter"></i> Apply Filters
+                    </button>
+                    <a href="{{ url_for('library') }}" class="btn btn-outline">
+                        <i class="fas fa-times"></i> Clear All
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- Results Info -->
+<section class="results-info">
+    <div class="container">
+        <div class="results-header">
+            <div class="results-count">
+                <span class="count-number">{{ pieces.total }}</span>
+                <span class="count-label">pieces found</span>
+            </div>
+
+            <div class="sort-options">
+                <label for="sort">Sort by:</label>
+                <select id="sort" class="sort-select" onchange="sortPieces(this.value)">
+                    <option value="difficulty" selected>Difficulty</option>
+                    <option value="title">Title</option>
+                    <option value="composer">Composer</option>
+                    <option value="era">Era</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Pieces Grid -->
+<section class="pieces-section">
+    <div class="container">
+        {% if pieces.items %}
+            <div class="pieces-grid">
+                {% for piece in pieces.items %}
+                <div class="piece-card" data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}">
+                    <div class="piece-cover">
+                        {% if piece.cover_image %}
+                            <img src="{{ piece.cover_image }}" alt="{{ piece.title }}">
+                        {% else %}
+                            <div class="piece-cover-placeholder">
+                                <i class="fas fa-music"></i>
+                            </div>
+                        {% endif %}
+                        <div class="piece-overlay">
+                            <div class="piece-actions">
+                                <button class="action-btn" onclick="showPieceDetails({{ piece.id }})" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                {% if current_user.is_authenticated %}
+                                    <button class="action-btn favorite-btn" onclick="toggleFavorite({{ piece.id }})" title="Add to Favorites" data-piece-id="{{ piece.id }}">
+                                        <i class="fas fa-heart {% if current_user.favorites and piece.id in current_user.favorites|map(attribute='piece_id')|list %}filled{% endif %}"></i>
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="piece-info">
+                        <div class="piece-header">
+                            <h3 class="piece-title">{{ piece.title }}</h3>
+                            <div class="piece-era">{{ piece.era }}</div>
+                        </div>
+                        <p class="piece-composer">{{ piece.composer }}</p>
+                        {% if piece.opus %}
+                            <p class="piece-opus">{{ piece.opus }}</p>
+                        {% endif %}
+                        <div class="piece-meta">
+                            <span class="piece-genre">{{ piece.genre }}</span>
+                            {% if piece.length %}
+                                <span class="piece-length">{{ piece.length }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="difficulty-section">
+                            <div class="difficulty-label">Difficulty</div>
+                            <div class="difficulty-display">
+                                <div class="difficulty-meter">
+                                    <div class="difficulty-fill" style="width: {{ (piece.difficulty_avg / 10) * 100 }}%"></div>
+                                </div>
+                                {% if piece.total_ratings > 0 %}
+                                    <span class="difficulty-score">{{ "%.1f"|format(piece.difficulty_avg) }}/10</span>
+                                    <div class="difficulty-level">
+                                        {% if piece.difficulty_avg >= 9 %}
+                                            Virtuoso
+                                        {% elif piece.difficulty_avg >= 8 %}
+                                            Professional
+                                        {% elif piece.difficulty_avg >= 7 %}
+                                            Extremely Advanced
+                                        {% elif piece.difficulty_avg >= 6 %}
+                                            Advanced
+                                        {% elif piece.difficulty_avg >= 5 %}
+                                            Early Advanced
+                                        {% elif piece.difficulty_avg >= 3 %}
+                                            Intermediate
+                                        {% elif piece.difficulty_avg >= 2 %}
+                                            Developing
+                                        {% else %}
+                                            Beginner
+                                        {% endif %}
+                                    </div>
+                                {% else %}
+                                    <span class="difficulty-score">No ratings yet</span>
+                                {% endif %}
+                            </div>
+                            <div class="rating-count">({{ piece.total_ratings }} ratings)</div>
+                        </div>
+                        
+                        <div class="piece-tags">
+                            {% if piece.technical_tags %}
+                                {% set tags = piece.technical_tags|from_json %}
+                                {% for tag in tags[:3] %}
+                                    <span class="piece-tag">{{ tag }}</span>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="piece-footer">
+                        <a href="{{ url_for('piece_detail', piece_id=piece.id) }}" class="btn btn-outline btn-sm">View Details</a>
+                        {% if current_user.is_authenticated %}
+                            <div class="rating-section">
+                                <div class="rating-label">Rate this piece:</div>
+                                <div class="rating-stars">
+                                    {% for i in range(1, 11) %}
+                                        <button class="star-btn" data-rating="{{ i }}" onclick="ratePiece({{ piece.id }}, {{ i }})">
+                                            <i class="fas fa-star {% if piece.difficulty_avg >= i %}filled{% endif %}"></i>
+                                        </button>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if pieces.pages > 1 %}
+            <div class="pagination">
+                {% if pieces.has_prev %}
+                    <a href="{{ url_for('library', page=pieces.prev_num, **request.args) }}" class="page-link">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </a>
+                {% endif %}
+                
+                {% for page_num in pieces.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != pieces.page %}
+                            <a href="{{ url_for('library', page=page_num, **request.args) }}" class="page-link">{{ page_num }}</a>
+                        {% else %}
+                            <span class="page-link active">{{ page_num }}</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="page-link ellipsis">...</span>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if pieces.has_next %}
+                    <a href="{{ url_for('library', page=pieces.next_num, **request.args) }}" class="page-link">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="no-results">
+                <div class="no-results-icon">
+                    <i class="fas fa-music"></i>
+                </div>
+                <h3>No pieces found</h3>
+                <p>Try adjusting your search criteria or browse all pieces.</p>
+                <a href="{{ url_for('library') }}" class="btn btn-primary">Browse All Pieces</a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.library-header {
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    color: white;
+    padding: 4rem 0;
+    text-align: center;
+}
+
+.page-title {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.page-subtitle {
+    font-size: 1.25rem;
+    opacity: 0.9;
+}
+
+.search-filters {
+    padding: 2rem 0;
+    background: white;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.filters-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.filters-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.search-group {
+    display: flex;
+    justify-content: center;
+}
+
+.search-input-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+}
+
+.search-input-wrapper i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    font-size: 1.125rem;
+}
+
+.search-input {
+    width: 100%;
+    padding: 1rem 1rem 1rem 3rem;
+    border: 2px solid #e9ecef;
+    border-radius: 25px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #8B0000;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.1);
+}
+
+.filters-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-group label {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.filter-select {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    font-size: 0.875rem;
+    background: white;
+    color: #2c3e50;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%238B0000' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 1rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25em;
+    padding-right: 2.5rem;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #8B0000;
+    box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.1);
+}
+
+.filter-select:hover {
+    border-color: #DAA520;
+    box-shadow: 0 4px 15px rgba(218, 165, 32, 0.2);
+}
+
+.filter-select option {
+    background: white;
+    color: #2c3e50;
+    padding: 0.75rem 1rem;
+}
+
+.filter-select option:hover {
+    background: #f8f9fa;
+}
+
+.filter-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-actions .btn {
+    padding: 0.875rem 1.75rem;
+    border-radius: 25px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.filter-actions .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.results-info {
+    padding: 1.5rem 0;
+    background: #f8f9fa;
+}
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.results-count {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.count-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #8B0000;
+}
+
+.count-label {
+    color: #6c757d;
+    font-size: 1rem;
+}
+
+.sort-options {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.sort-options label {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.875rem;
+}
+
+.sort-select {
+    padding: 0.5rem 1rem;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    font-size: 0.875rem;
+    background: white;
+    color: #2c3e50;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%238B0000' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1em;
+    padding-right: 2rem;
+}
+
+.sort-select:focus {
+    outline: none;
+    border-color: #8B0000;
+    box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.1);
+}
+
+.sort-select:hover {
+    border-color: #DAA520;
+}
+
+.pieces-section {
+    padding: 3rem 0;
+    background: white;
+}
+
+.pieces-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.piece-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transition: all 0.4s ease;
+    border: 1px solid #e9ecef;
+    position: relative;
+}
+
+.piece-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.piece-cover {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+    border-radius: 12px 12px 0 0;
+    width: 100%;
+}
+
+.piece-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.piece-card:hover .piece-cover img {
+    transform: scale(1.05);
+}
+
+.piece-cover-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 3rem;
+}
+
+.piece-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.piece-card:hover .piece-overlay {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.piece-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.action-btn {
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #2c3e50;
+    font-size: 1.125rem;
+}
+
+.action-btn:hover {
+    background: white;
+    transform: scale(1.1);
+}
+
+.favorite-btn i.filled {
+    color: #e74c3c;
+}
+
+.piece-info {
+    padding: 1.5rem;
+}
+
+.piece-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.piece-title {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #2c3e50;
+    line-height: 1.3;
+    flex: 1;
+}
+
+.piece-era {
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-left: 1rem;
+    flex-shrink: 0;
+}
+
+.piece-composer {
+    margin: 0 0 0.5rem 0;
+    color: #6c757d;
+    font-style: italic;
+    font-size: 1rem;
+}
+
+.piece-opus {
+    margin: 0 0 1rem 0;
+    color: #8B0000;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.piece-meta {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.piece-genre, .piece-length {
+    background: #f8f9fa;
+    color: #6c757d;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.difficulty-section {
+    margin-bottom: 1rem;
+}
+
+.difficulty-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.difficulty-display {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.difficulty-meter {
+    flex: 1;
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.difficulty-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #ffc107, #dc3545);
+    transition: width 0.3s ease;
+}
+
+.difficulty-score {
+    font-weight: 700;
+    color: #2c3e50;
+    font-size: 0.875rem;
+}
+
+.difficulty-level {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #495057;
+    text-align: center;
+    margin-top: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+}
+
+.rating-count {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.piece-tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    justify-content: center;
+}
+
+.piece-tag {
+    background: #8B0000;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(139, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    width: 100px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.piece-tag::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.piece-tag:hover::before {
+    left: 100%;
+}
+
+.piece-tag:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(139, 0, 0, 0.4);
+}
+
+.piece-tag:nth-child(3n+1) {
+    background: #8B0000;
+}
+
+.piece-tag:nth-child(3n+2) {
+    background: #2c3e50;
+}
+
+.piece-tag:nth-child(3n+3) {
+    background: #27ae60;
+}
+
+.piece-tag:nth-child(3n+1):hover {
+    box-shadow: 0 4px 15px rgba(139, 0, 0, 0.4);
+}
+
+.piece-tag:nth-child(3n+2):hover {
+    box-shadow: 0 4px 15px rgba(44, 62, 80, 0.4);
+}
+
+.piece-tag:nth-child(3n+3):hover {
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
+}
+
+.piece-footer {
+    padding: 1rem 1.5rem 1.5rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.rating-section {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.rating-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.rating-stars {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.star-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    color: #e9ecef;
+    transition: color 0.3s ease;
+    padding: 0.25rem;
+}
+
+.star-btn:hover {
+    color: #ffc107;
+}
+
+.star-btn i.filled {
+    color: #ffc107;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 3rem;
+    flex-wrap: wrap;
+}
+
+.page-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    color: #6c757d;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.page-link:hover {
+    border-color: #8B0000;
+    color: #8B0000;
+    text-decoration: none;
+}
+
+.page-link.active {
+    background: #8B0000;
+    border-color: #8B0000;
+    color: white;
+}
+
+.page-link.ellipsis {
+    border: none;
+    background: none;
+    cursor: default;
+}
+
+.page-link.ellipsis:hover {
+    border: none;
+    background: none;
+    color: #6c757d;
+}
+
+.no-results {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.no-results-icon {
+    font-size: 4rem;
+    color: #6c757d;
+    margin-bottom: 1rem;
+}
+
+.no-results h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.no-results p {
+    color: #6c757d;
+    margin-bottom: 2rem;
+}
+
+/* Button Styles */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    justify-content: center;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    color: white;
+    box-shadow: 0 4px 15px rgba(139, 0, 0, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 0, 0, 0.4);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-outline {
+    background: transparent;
+    color: #8B0000;
+    border: 2px solid #8B0000;
+}
+
+.btn-outline:hover {
+    background: #8B0000;
+    color: white;
+    text-decoration: none;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .pieces-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        padding: 0 1rem;
+    }
+    
+    .filters-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .filter-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .results-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+}
+
+/* Search Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.piece-card {
+    animation: fadeIn 0.3s ease;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filter form submission
+    const filterForm = document.getElementById('filterForm');
+    const applyFiltersBtn = document.getElementById('applyFilters');
+    const searchInput = document.querySelector('.search-input');
+    
+    if (filterForm) {
+        filterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form data
+            const formData = new FormData(filterForm);
+            const params = new URLSearchParams();
+            
+            // Add non-empty values to params
+            for (let [key, value] of formData.entries()) {
+                if (value.trim() !== '') {
+                    params.append(key, value.trim());
+                }
+            }
+            
+            // Redirect to filtered results
+            const url = `${window.location.pathname}?${params.toString()}`;
+            window.location.href = url;
+        });
+    }
+    
+    // Search functionality
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            const pieceCards = document.querySelectorAll('.piece-card');
+            
+            pieceCards.forEach(card => {
+                const title = card.querySelector('.piece-title').textContent.toLowerCase();
+                const composer = card.querySelector('.piece-composer').textContent.toLowerCase();
+                const era = card.querySelector('.piece-era').textContent.toLowerCase();
+                const genre = card.querySelector('.piece-genre').textContent.toLowerCase();
+                
+                if (title.includes(query) || composer.includes(query) || era.includes(query) || genre.includes(query)) {
+                    card.style.display = 'block';
+                    card.style.animation = 'fadeIn 0.3s ease';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            // Update results count
+            const visibleCards = document.querySelectorAll('.piece-card[style*="display: block"], .piece-card:not([style*="display: none"])');
+            const resultsCount = document.querySelector('.count-number');
+            if (resultsCount) {
+                resultsCount.textContent = visibleCards.length;
+            }
+        });
+        
+        // Clear search on clear filters
+        document.querySelector('.btn-outline').addEventListener('click', function() {
+            searchInput.value = '';
+            const pieceCards = document.querySelectorAll('.piece-card');
+            pieceCards.forEach(card => {
+                card.style.display = 'block';
+                card.style.animation = 'fadeIn 0.3s ease';
+            });
+            
+            // Reset results count
+            const resultsCount = document.querySelector('.count-number');
+            if (resultsCount) {
+                resultsCount.textContent = pieceCards.length;
+            }
+        });
+    }
+    
+    // Initialize piece cards
+    initializePieceCards();
+    
+    // Set default sorting to difficulty (hardest to easiest)
+    sortPieces('difficulty');
+});
+
+function initializePieceCards() {
+    const pieceCards = document.querySelectorAll('.piece-card');
+    pieceCards.forEach(card => {
+        // Add hover effects and animations
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+}
+
+function toggleFavorite(pieceId) {
+    if (!isAuthenticated) {
+        showMessage('Please log in to add favorites', 'error');
+        return;
+    }
+    
+    fetch('/favorite_piece', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ piece_id: pieceId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const favoriteBtn = document.querySelector(`[data-piece-id="${pieceId}"] i`);
+            if (favoriteBtn) {
+                favoriteBtn.classList.toggle('filled');
+            }
+            showMessage(data.message, 'success');
+        } else {
+            showMessage(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showMessage('Error updating favorite', 'error');
+    });
+}
+
+function ratePiece(pieceId, rating) {
+    if (!isAuthenticated) {
+        showMessage('Please log in to rate pieces', 'error');
+        return;
+    }
+    
+    fetch('/rate_piece', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ piece_id: pieceId, rating: rating })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update the difficulty display
+            const pieceCard = document.querySelector(`[data-piece-id="${pieceId}"]`).closest('.piece-card');
+            const difficultyFill = pieceCard.querySelector('.difficulty-fill');
+            const difficultyScore = pieceCard.querySelector('.difficulty-score');
+            const ratingCount = pieceCard.querySelector('.rating-count');
+            
+            if (difficultyFill && difficultyScore && ratingCount) {
+                const newWidth = (data.new_average / 10) * 100;
+                difficultyFill.style.width = newWidth + '%';
+                difficultyScore.textContent = data.new_average.toFixed(1) + '/10';
+                
+                // Update rating count (increment by 1)
+                const currentCount = parseInt(ratingCount.textContent.match(/\d+/)[0]);
+                ratingCount.textContent = `(${currentCount + 1} ratings)`;
+            }
+            
+            // Update star display
+            const stars = pieceCard.querySelectorAll('.star-btn i');
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('filled');
+                } else {
+                    star.classList.remove('filled');
+                }
+            });
+            
+            showMessage('Rating submitted successfully!', 'success');
+        } else {
+            showMessage(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showMessage('Error submitting rating', 'error');
+    });
+}
+
+function sortPieces(sortBy) {
+    const pieceCards = Array.from(document.querySelectorAll('.piece-card'));
+    const piecesGrid = document.querySelector('.pieces-grid');
+    
+    console.log(`Sorting by: ${sortBy}`);
+    console.log(`Found ${pieceCards.length} pieces to sort`);
+    
+    pieceCards.sort((a, b) => {
+        let aValue, bValue;
+        
+        switch(sortBy) {
+            case 'title':
+                aValue = a.querySelector('.piece-title').textContent.toLowerCase();
+                bValue = b.querySelector('.piece-title').textContent.toLowerCase();
+                break;
+            case 'composer':
+                aValue = a.querySelector('.piece-composer').textContent.toLowerCase();
+                bValue = b.querySelector('.piece-composer').textContent.toLowerCase();
+                break;
+            case 'difficulty':
+                const aScore = a.querySelector('.difficulty-score').textContent;
+                const bScore = b.querySelector('.difficulty-score').textContent;
+                
+                console.log(`Comparing difficulty: "${aScore}" vs "${bScore}"`);
+                
+                // Handle "No ratings yet" case
+                if (aScore === 'No ratings yet') aValue = 0;
+                else aValue = parseFloat(aScore.split('/')[0]); // Extract number before "/10"
+                
+                if (bScore === 'No ratings yet') bValue = 0;
+                else bValue = parseFloat(bScore.split('/')[0]); // Extract number before "/10"
+                
+                console.log(`Parsed values: ${aValue} vs ${bValue}`);
+                break;
+            case 'era':
+                aValue = a.querySelector('.piece-era').textContent.toLowerCase();
+                bValue = b.querySelector('.piece-era').textContent.toLowerCase();
+                break;
+            default:
+                return 0;
+        }
+        
+        // For difficulty, we want hardest first (descending order)
+        if (sortBy === 'difficulty') {
+            if (aValue > bValue) return -1;  // Higher difficulty first
+            if (aValue < bValue) return 1;   // Lower difficulty last
+            return 0;
+        }
+        
+        // For other fields, use ascending order
+        if (aValue < bValue) return -1;
+        if (aValue > bValue) return 1;
+        return 0;
+    });
+    
+    // Clear and re-append sorted cards
+    piecesGrid.innerHTML = '';
+    pieceCards.forEach(card => {
+        piecesGrid.appendChild(card);
+    });
+    
+    console.log('Sorting completed');
+}
+
+function showPieceDetails(pieceId) {
+    // This could open a modal or redirect to piece detail page
+    window.location.href = `/piece/${pieceId}`;
+}
+
+function showMessage(message, type = 'info') {
+    // Create a simple message display
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message message-${type}`;
+    messageDiv.textContent = message;
+    messageDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        z-index: 1000;
+        background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8'};
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    `;
+    
+    document.body.appendChild(messageDiv);
+    
+    setTimeout(() => {
+        messageDiv.remove();
+    }, 3000);
+}
+
+// Check if user is authenticated
+const isAuthenticated = {{ 'true' if current_user.is_authenticated else 'false' }};
+</script>
+{% endblock %}
+
+

@@ -1,0 +1,841 @@
+{% extends "base.html" %}
+
+{% block title %}Register - MyViolinRep{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-logo">
+                <i class="fas fa-violin"></i>
+                <h1>Join the Community</h1>
+            </div>
+            <p>Create your account and start exploring violin repertoire</p>
+        </div>
+        
+        <form id="register-form" class="auth-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" name="password" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirm-password">Confirm Password</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="confirm-password" name="confirm-password" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword('confirm-password')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="bio">Bio (Optional)</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-quote-left"></i>
+                    <textarea id="bio" name="bio" placeholder="Tell us about your violin journey..." rows="3"></textarea>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="country">Country (Optional)</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-globe"></i>
+                    <select id="country" name="country">
+                        <option value="">Select your country</option>
+                        <option value="US">United States</option>
+                        <option value="CA">Canada</option>
+                        <option value="GB">United Kingdom</option>
+                        <option value="DE">Germany</option>
+                        <option value="FR">France</option>
+                        <option value="IT">Italy</option>
+                        <option value="JP">Japan</option>
+                        <option value="AU">Australia</option>
+                        <option value="BR">Brazil</option>
+                        <option value="IN">India</option>
+                        <option value="CN">China</option>
+                        <option value="RU">Russia</option>
+                        <option value="KR">South Korea</option>
+                        <option value="MX">Mexico</option>
+                        <option value="NL">Netherlands</option>
+                        <option value="SE">Sweden</option>
+                        <option value="NO">Norway</option>
+                        <option value="DK">Denmark</option>
+                        <option value="FI">Finland</option>
+                        <option value="CH">Switzerland</option>
+                        <option value="AT">Austria</option>
+                        <option value="BE">Belgium</option>
+                        <option value="ES">Spain</option>
+                        <option value="PT">Portugal</option>
+                        <option value="IE">Ireland</option>
+                        <option value="NZ">New Zealand</option>
+                        <option value="SG">Singapore</option>
+                        <option value="HK">Hong Kong</option>
+                        <option value="TW">Taiwan</option>
+                        <option value="TH">Thailand</option>
+                        <option value="MY">Malaysia</option>
+                        <option value="ID">Indonesia</option>
+                        <option value="PH">Philippines</option>
+                        <option value="VN">Vietnam</option>
+                        <option value="TR">Turkey</option>
+                        <option value="PL">Poland</option>
+                        <option value="CZ">Czech Republic</option>
+                        <option value="HU">Hungary</option>
+                        <option value="RO">Romania</option>
+                        <option value="BG">Bulgaria</option>
+                        <option value="HR">Croatia</option>
+                        <option value="SI">Slovenia</option>
+                        <option value="SK">Slovakia</option>
+                        <option value="LT">Lithuania</option>
+                        <option value="LV">Latvia</option>
+                        <option value="EE">Estonia</option>
+                        <option value="GR">Greece</option>
+                        <option value="CY">Cyprus</option>
+                        <option value="MT">Malta</option>
+                        <option value="LU">Luxembourg</option>
+                        <option value="IS">Iceland</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-options">
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" id="terms" name="terms" required>
+                    <span class="checkmark"></span>
+                    I agree to the <a href="#" class="terms-link">Terms of Service</a> and <a href="#" class="terms-link">Privacy Policy</a>
+                </label>
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" id="newsletter" name="newsletter">
+                    <span class="checkmark"></span>
+                    Subscribe to our newsletter for updates and tips
+                </label>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-full">
+                <span class="btn-text">Create Account</span>
+                <span class="btn-loading" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Creating account...
+                </span>
+            </button>
+        </form>
+        
+        <div class="auth-divider">
+            <span>or</span>
+        </div>
+        
+        <div class="social-auth">
+            <a href="{{ url_for('google_login') }}" class="btn btn-social btn-google">
+                <i class="fab fa-google"></i>
+                Sign up with Google
+            </a>
+        </div>
+        
+        <div class="auth-footer">
+            <p>Already have an account? <a href="{{ url_for('login') }}">Sign in</a></p>
+        </div>
+    </div>
+    
+    <div class="auth-decoration">
+        <div class="music-notes">
+            <div class="note note-1">♪</div>
+            <div class="note note-2">♫</div>
+            <div class="note note-3">♩</div>
+            <div class="note note-4">♬</div>
+            <div class="note note-5">♪</div>
+        </div>
+        <div class="violin-silhouette">
+            <svg viewBox="0 0 100 200" xmlns="http://www.w3.org/2000/svg">
+                <path d="M50 180 Q50 160 50 140 Q50 120 50 100 Q50 80 50 60 Q50 40 50 20 Q50 10 50 0" 
+                      stroke="#8B0000" stroke-width="2" fill="none" opacity="0.3"/>
+                <ellipse cx="50" cy="150" rx="30" ry="40" fill="none" stroke="#8B0000" stroke-width="2" opacity="0.3"/>
+                <circle cx="50" cy="120" r="3" fill="#8B0000" opacity="0.3"/>
+                <circle cx="50" cy="100" r="3" fill="#8B0000" opacity="0.3"/>
+                <circle cx="50" cy="80" r="3" fill="#8B0000" opacity="0.3"/>
+            </svg>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.auth-card {
+    background: white;
+    border-radius: 24px;
+    padding: 3rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 550px;
+    position: relative;
+    z-index: 2;
+    animation: slideUp 0.6s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.auth-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.auth-logo i {
+    font-size: 2.5rem;
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.auth-logo h1 {
+    font-size: 2rem;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.auth-header p {
+    color: #6c757d;
+    font-size: 1.125rem;
+    margin: 0;
+}
+
+.auth-form {
+    margin-bottom: 2rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-wrapper i {
+    position: absolute;
+    left: 1rem;
+    color: #6c757d;
+    z-index: 1;
+}
+
+.input-wrapper input,
+.input-wrapper select,
+.input-wrapper textarea {
+    width: 100%;
+    padding: 1rem 1rem 1rem 3rem;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+    font-family: inherit;
+}
+
+.input-wrapper textarea {
+    padding-left: 3rem;
+    resize: vertical;
+    min-height: 80px;
+}
+
+.input-wrapper input:focus,
+.input-wrapper select:focus,
+.input-wrapper textarea:focus {
+    outline: none;
+    border-color: #8B0000;
+    box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.1);
+}
+
+.password-toggle {
+    position: absolute;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.password-toggle:hover {
+    color: #8B0000;
+    background: rgba(139, 0, 0, 0.05);
+}
+
+.form-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.checkbox-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: #6c757d;
+    line-height: 1.4;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #e9ecef;
+    border-radius: 4px;
+    position: relative;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+}
+
+.checkbox-wrapper input[type="checkbox"]:checked + .checkmark {
+    background: #8B0000;
+    border-color: #8B0000;
+}
+
+.checkbox-wrapper input[type="checkbox"]:checked + .checkmark::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.terms-link {
+    color: #8B0000;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.terms-link:hover {
+    color: #DAA520;
+}
+
+.btn-full {
+    width: 100%;
+    justify-content: center;
+}
+
+.btn-loading {
+    display: none;
+}
+
+.btn-loading.show {
+    display: inline-flex;
+}
+
+.btn-text.hide {
+    display: none;
+}
+
+.auth-divider {
+    text-align: center;
+    margin: 2rem 0;
+    position: relative;
+}
+
+.auth-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #e9ecef;
+}
+
+.auth-divider span {
+    background: white;
+    padding: 0 1rem;
+    color: #6c757d;
+    font-size: 0.875rem;
+    position: relative;
+    z-index: 1;
+}
+
+.social-auth {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.btn-social {
+    background: white;
+    color: #2c3e50;
+    border: 2px solid #e9ecef;
+    padding: 0.875rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.btn-social:hover {
+    border-color: #8B0000;
+    background: rgba(139, 0, 0, 0.05);
+    transform: translateY(-2px);
+}
+
+.btn-google:hover {
+    border-color: #DB4437;
+    background: rgba(219, 68, 55, 0.05);
+}
+
+.btn-facebook:hover {
+    border-color: #4267B2;
+    background: rgba(66, 103, 178, 0.05);
+}
+
+.auth-footer {
+    text-align: center;
+}
+
+.auth-footer p {
+    color: #6c757d;
+    margin: 0;
+}
+
+.auth-footer a {
+    color: #8B0000;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.auth-footer a:hover {
+    color: #DAA520;
+}
+
+.auth-decoration {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.music-notes {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.note {
+    position: absolute;
+    font-size: 3rem;
+    color: rgba(139, 0, 0, 0.1);
+    animation: float 20s linear infinite;
+}
+
+.note-1 { top: 10%; left: 10%; animation-delay: 0s; }
+.note-2 { top: 20%; right: 15%; animation-delay: 4s; }
+.note-3 { top: 60%; left: 5%; animation-delay: 8s; }
+.note-4 { top: 80%; right: 10%; animation-delay: 12s; }
+.note-5 { top: 40%; left: 80%; animation-delay: 16s; }
+
+@keyframes float {
+    0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-100px) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+.violin-silhouette {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 200px;
+    height: 400px;
+    opacity: 0.05;
+}
+
+@media (max-width: 768px) {
+    .auth-container {
+        padding: 1rem;
+    }
+    
+    .auth-card {
+        padding: 2rem;
+        border-radius: 20px;
+        max-width: 100%;
+    }
+    
+    .auth-logo h1 {
+        font-size: 1.75rem;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+    
+    .social-auth {
+        flex-direction: column;
+    }
+    
+    .form-options {
+        gap: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('register-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Validate passwords match
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+    
+    if (password !== confirmPassword) {
+        if (window.MyViolinRep) {
+            window.MyViolinRep.showMessage('Passwords do not match', 'error');
+        } else {
+            alert('Passwords do not match');
+        }
+        return;
+    }
+    
+    // Validate password strength
+    if (password.length < 8) {
+        if (window.MyViolinRep) {
+            window.MyViolinRep.showMessage('Password must be at least 8 characters long', 'error');
+        } else {
+            alert('Password must be at least 8 characters long');
+        }
+        return;
+    }
+    
+    const formData = {
+        username: document.getElementById('username').value,
+        email: document.getElementById('email').value,
+        password: password,
+        bio: document.getElementById('bio').value,
+        country: document.getElementById('country').value
+    };
+    
+    // Show loading state
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const btnText = submitBtn.querySelector('.btn-text');
+    const btnLoading = submitBtn.querySelector('.btn-loading');
+    
+    btnText.classList.add('hide');
+    btnLoading.classList.add('show');
+    submitBtn.disabled = true;
+    
+    // Submit form
+    fetch('{{ url_for("register") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            if (window.MyViolinRep) {
+                window.MyViolinRep.showMessage('Account created successfully! Redirecting...', 'success');
+            }
+            
+            // Redirect after short delay
+            setTimeout(() => {
+                window.location.href = data.redirect;
+            }, 1000);
+        } else {
+            // Show error message
+            if (window.MyViolinRep) {
+                window.MyViolinRep.showMessage(data.message, 'error');
+            } else {
+                alert(data.message);
+            }
+            
+            // Reset form state
+            btnText.classList.remove('hide');
+            btnLoading.classList.remove('show');
+            submitBtn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        
+        if (window.MyViolinRep) {
+            window.MyViolinRep.showMessage('An error occurred. Please try again.', 'error');
+        } else {
+            alert('An error occurred. Please try again.');
+        }
+        
+        // Reset form state
+        btnText.classList.remove('hide');
+        btnLoading.classList.remove('show');
+        submitBtn.disabled = false;
+    });
+});
+
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const toggle = input.parentNode.querySelector('.password-toggle i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        toggle.classList.remove('fa-eye');
+        toggle.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        toggle.classList.remove('fa-eye-slash');
+        toggle.classList.add('fa-eye');
+    }
+}
+
+// Add input focus effects
+document.querySelectorAll('.input-wrapper input, .input-wrapper select, .input-wrapper textarea').forEach(input => {
+    input.addEventListener('focus', function() {
+        this.parentNode.style.transform = 'scale(1.02)';
+    });
+    
+    input.addEventListener('blur', function() {
+        this.parentNode.style.transform = 'scale(1)';
+    });
+});
+
+// Add form validation
+document.querySelectorAll('.input-wrapper input, .input-wrapper select, .input-wrapper textarea').forEach(input => {
+    input.addEventListener('blur', function() {
+        if (this.hasAttribute('required') && !this.value.trim()) {
+            this.style.borderColor = '#dc3545';
+            showFieldError(this, 'This field is required');
+        } else {
+            this.style.borderColor = '#e9ecef';
+            clearFieldError(this);
+        }
+    });
+    
+    input.addEventListener('input', function() {
+        if (this.style.borderColor === 'rgb(220, 53, 69)') {
+            this.style.borderColor = '#e9ecef';
+            clearFieldError(this);
+        }
+    });
+});
+
+// Password strength indicator
+document.getElementById('password').addEventListener('input', function() {
+    const password = this.value;
+    const strength = getPasswordStrength(password);
+    updatePasswordStrengthIndicator(strength);
+});
+
+function getPasswordStrength(password) {
+    let score = 0;
+    
+    if (password.length >= 8) score++;
+    if (password.match(/[a-z]/)) score++;
+    if (password.match(/[A-Z]/)) score++;
+    if (password.match(/[0-9]/)) score++;
+    if (password.match(/[^a-zA-Z0-9]/)) score++;
+    
+    if (score <= 2) return 'weak';
+    if (score <= 3) return 'medium';
+    return 'strong';
+}
+
+function updatePasswordStrengthIndicator(strength) {
+    let existingIndicator = document.querySelector('.password-strength');
+    if (existingIndicator) {
+        existingIndicator.remove();
+    }
+    
+    const indicator = document.createElement('div');
+    indicator.className = 'password-strength';
+    
+    let color, text;
+    switch(strength) {
+        case 'weak':
+            color = '#dc3545';
+            text = 'Weak password';
+            break;
+        case 'medium':
+            color = '#ffc107';
+            text = 'Medium strength password';
+            break;
+        case 'strong':
+            color = '#28a745';
+            text = 'Strong password';
+            break;
+    }
+    
+    indicator.style.cssText = `
+        color: ${color};
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+        font-weight: 500;
+    `;
+    indicator.textContent = text;
+    
+    document.getElementById('password').parentNode.parentNode.appendChild(indicator);
+}
+
+function showFieldError(field, message) {
+    clearFieldError(field);
+    
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'field-error';
+    errorDiv.textContent = message;
+    errorDiv.style.cssText = `
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+        animation: fadeIn 0.3s ease;
+    `;
+    
+    field.parentNode.parentNode.appendChild(errorDiv);
+}
+
+function clearFieldError(field) {
+    const existingError = field.parentNode.parentNode.querySelector('.field-error');
+    if (existingError) {
+        existingError.remove();
+    }
+}
+
+// Real-time username availability check
+let usernameTimeout;
+document.getElementById('username').addEventListener('input', function() {
+    clearTimeout(usernameTimeout);
+    const username = this.value.trim();
+    
+    if (username.length >= 3) {
+        usernameTimeout = setTimeout(() => {
+            checkUsernameAvailability(username);
+        }, 500);
+    }
+});
+
+function checkUsernameAvailability(username) {
+    // This would typically make an API call to check username availability
+    // For now, we'll just show a loading state
+    const input = document.getElementById('username');
+    const existingIndicator = input.parentNode.parentNode.querySelector('.username-status');
+    
+    if (existingIndicator) {
+        existingIndicator.remove();
+    }
+    
+    const indicator = document.createElement('div');
+    indicator.className = 'username-status';
+    indicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking availability...';
+    indicator.style.cssText = `
+        color: #6c757d;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    `;
+    
+    input.parentNode.parentNode.appendChild(indicator);
+    
+    // Simulate API call
+    setTimeout(() => {
+        indicator.innerHTML = '<i class="fas fa-check"></i> Username available!';
+        indicator.style.color = '#28a745';
+    }, 1000);
+}
+</script>
+{% endblock %}

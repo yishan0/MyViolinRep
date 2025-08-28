@@ -116,7 +116,7 @@
                             <button class="emoji-category" data-category="symbols">❤️</button>
                             <button class="emoji-category" data-category="flags">🏁</button>
                         </div>
-                        <div class="emoji-grid" id="emoji-grid">
+                        <div class="emoji-grid" id="emoji-list">
                             <!-- Emojis will be loaded here -->
                         </div>
                     </div>
@@ -1455,6 +1455,28 @@ function switchRoom(roomName) {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Chat page loaded, currentUser:', currentUser);
     
+    // Add click-outside-to-close functionality for emoji picker and attachment menu
+    document.addEventListener('click', function(event) {
+        const emojiPicker = document.getElementById('emoji-picker');
+        const attachmentMenu = document.getElementById('attachment-menu');
+        const emojiBtn = document.getElementById('emoji-btn');
+        const attachBtn = document.getElementById('attach-btn');
+        
+        // Close emoji picker if clicking outside
+        if (emojiPicker && emojiPicker.style.display === 'block') {
+            if (!emojiPicker.contains(event.target) && !emojiBtn.contains(event.target)) {
+                emojiPicker.style.display = 'none';
+            }
+        }
+        
+        // Close attachment menu if clicking outside
+        if (attachmentMenu && attachmentMenu.style.display === 'block') {
+            if (!attachmentMenu.contains(event.target) && !attachBtn.contains(event.target)) {
+                attachmentMenu.style.display = 'none';
+            }
+        }
+    });
+    
     // Check if we have a room parameter in the URL
     const urlParams = new URLSearchParams(window.location.search);
     const roomParam = urlParams.get('room');
@@ -2230,11 +2252,18 @@ function toggleEmojiPicker() {
     const picker = document.getElementById('emoji-picker');
     const attachmentMenu = document.getElementById('attachment-menu');
     
+    if (!picker) {
+        console.error('Emoji picker not found');
+        return;
+    }
+    
     if (picker.style.display === 'block') {
         picker.style.display = 'none';
     } else {
         picker.style.display = 'block';
-        attachmentMenu.style.display = 'none';
+        if (attachmentMenu) {
+            attachmentMenu.style.display = 'none';
+        }
         loadEmojis();
     }
 }
@@ -2262,11 +2291,16 @@ function loadEmojis() {
 // Insert emoji into message input
 function insertEmoji(emoji) {
     const messageInput = document.getElementById('message-input');
-    messageInput.value += emoji;
-    messageInput.focus();
-    
-    // Hide emoji picker
-    document.getElementById('emoji-picker').style.display = 'none';
+    if (messageInput) {
+        messageInput.value += emoji;
+        messageInput.focus();
+        
+        // Hide emoji picker
+        const emojiPicker = document.getElementById('emoji-picker');
+        if (emojiPicker) {
+            emojiPicker.style.display = 'none';
+        }
+    }
 }
 
 // Toggle attachment menu
@@ -2296,7 +2330,10 @@ function addImageLink() {
         const messageInput = document.getElementById('message-input');
         messageInput.value += ` ![Image](${url})`;
         messageInput.focus();
-        document.getElementById('attachment-menu').style.display = 'none';
+        const attachmentMenu = document.getElementById('attachment-menu');
+        if (attachmentMenu) {
+            attachmentMenu.style.display = 'none';
+        }
     }
 }
 

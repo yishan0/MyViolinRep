@@ -418,20 +418,12 @@
     margin-bottom: 1.5rem;
 }
 
-.form-group i {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #8B0000;
-    font-size: 1rem;
-    z-index: 2;
-}
+
 
 .form-group input,
 .form-group select {
     width: 100%;
-    padding: 1rem 1rem 1rem 2.75rem;
+    padding: 1rem 1rem 1rem 3rem;
     border: 2px solid #e9ecef;
     border-radius: 15px;
     font-size: 1rem;
@@ -446,7 +438,7 @@
 
 .form-group textarea {
     width: 100%;
-    padding: 1rem 1rem 1rem 2.75rem;
+    padding: 1rem 1rem 1rem 3rem;
     border: 2px solid #e9ecef;
     border-radius: 15px;
     font-size: 1rem;
@@ -495,7 +487,7 @@
 
 .input-icon {
     position: absolute;
-    left: 0.75rem;
+    left: 1rem;
     top: 50%;
     transform: translateY(-50%);
     color: #8B0000;
@@ -503,17 +495,21 @@
     opacity: 0.7;
     transition: all 0.3s ease;
     z-index: 2;
+    pointer-events: none;
+    line-height: 1;
 }
 
 .textarea-icon {
     position: absolute;
-    left: 0.75rem;
+    left: 1rem;
     top: 1.25rem;
     color: #8B0000;
     font-size: 1rem;
     opacity: 0.7;
     transition: all 0.3s ease;
     z-index: 2;
+    pointer-events: none;
+    line-height: 1;
 }
 
 .form-group input:focus + .input-icon,
@@ -666,6 +662,8 @@
     background: #e9ecef;
     outline: none;
     -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
     margin-bottom: 1rem;
 }
 

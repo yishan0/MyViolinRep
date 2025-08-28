@@ -13,7 +13,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 import requests as http_requests
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates')
 app.config['SECRET_KEY'] = 'your-secret-key-here'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///myviolinrep.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -863,7 +863,7 @@ def get_messages(room):
     print(f"DEBUG: Getting messages for room: '{room}'")
     
     if room == 'general':
-        messages = Message.query.filter_by(room='general').order_by(Message.date_sent.desc()).limit(50).all()
+        messages = Message.query.filter_by(room='general').order_by(Message.date_sent.asc()).limit(50).all()
     elif room.startswith('dm_'):
         # For DMs, get messages between current user and another user
         # Room format: dm_username1_username2
@@ -893,7 +893,7 @@ def get_messages(room):
             return jsonify({'success': False, 'message': 'Invalid room format'})
     else:
         # For other rooms (technique, repertoire, etc.)
-        messages = Message.query.filter_by(room=room).order_by(Message.date_sent.desc()).limit(50).all()
+        messages = Message.query.filter_by(room=room).order_by(Message.date_sent.asc()).limit(50).all()
     
     print(f"DEBUG: Found {len(messages)} messages for room '{room}'")
     

@@ -127,6 +127,9 @@
                 <button class="tab-btn active" data-tab="repertoire">
                     <i class="fas fa-music"></i> My Repertoire
                 </button>
+                <button class="tab-btn" data-tab="favorites">
+                    <i class="fas fa-heart"></i> My Favorites
+                </button>
                 <button class="tab-btn" data-tab="ratings">
                     <i class="fas fa-star"></i> My Ratings
                 </button>
@@ -141,7 +144,7 @@
             <div class="tab-content active" id="repertoire-tab">
                 <div class="content-header">
                     <h3>My Repertoire</h3>
-                    <p>Pieces you've submitted and rated</p>
+                    <p>Pieces you've submitted and/or rated</p>
                 </div>
                 
                 {% if user_pieces or user_ratings %}
@@ -202,6 +205,53 @@
                         </div>
                         <h4>No repertoire yet</h4>
                         <p>Start building your repertoire by rating pieces or submitting new ones!</p>
+                        <a href="{{ url_for('library') }}" class="btn btn-primary">Browse Pieces</a>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="tab-content" id="favorites-tab">
+                <div class="content-header">
+                    <h3>My Favorites</h3>
+                    <p>Pieces you've favorited</p>
+                </div>
+                
+                {% if favorite_pieces %}
+                    <div class="pieces-grid">
+                        {% for piece in favorite_pieces %}
+                            <div class="piece-card" data-aos="fade-up">
+                                <div class="piece-cover">
+                                    {% if piece.cover_image %}
+                                        <img src="{{ piece.cover_image }}" alt="{{ piece.title }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                                    {% else %}
+                                        <div class="piece-cover-placeholder">
+                                            <i class="fas fa-music"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="piece-info">
+                                    <h4>{{ piece.title }}</h4>
+                                    <p class="piece-composer">{{ piece.composer }}</p>
+                                    <div class="piece-meta">
+                                        <span class="meta-badge era">{{ piece.era }}</span>
+                                        <span class="meta-badge genre">{{ piece.genre }}</span>
+                                    </div>
+                                </div>
+                                <div class="piece-actions">
+                                    <a href="{{ url_for('piece_detail', piece_id=piece.id) }}" class="btn btn-outline btn-sm">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <h4>No favorites yet</h4>
+                        <p>Start favoriting pieces you love to build your collection!</p>
                         <a href="{{ url_for('library') }}" class="btn btn-primary">Browse Pieces</a>
                     </div>
                 {% endif %}

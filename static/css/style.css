@@ -234,6 +234,84 @@ h1, h2, h3, h4, h5, h6 {
     flex-shrink: 0;
 }
 
+.search-result-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+/* Piece Submitter Info Styles */
+.piece-submitter-info {
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    background: rgba(139, 0, 0, 0.05);
+    border-radius: 8px;
+    border-left: 3px solid #8B0000;
+    font-size: 0.85rem;
+}
+
+.submitter-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin: 0 0 0.25rem 0;
+    font-weight: 500;
+}
+
+.submitter-details {
+    display: flex;
+    align-items: center;
+}
+
+.submitter-link {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    text-decoration: none;
+    color: #2c3e50;
+    transition: all 0.2s ease;
+    font-size: 0.85rem;
+}
+
+.submitter-link:hover {
+    color: #8B0000;
+    transform: translateX(2px);
+}
+
+.submitter-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+
+
+.submitter-avatar-placeholder {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #8B0000, #DAA520);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.875rem;
+    border: 2px solid #8B0000;
+}
+
+.submitter-username {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.submitter-unknown {
+    color: #6c757d;
+    font-style: italic;
+    font-size: 0.875rem;
+}
+
 .search-result-item .result-info {
     flex: 1;
     min-width: 0;
@@ -1248,6 +1326,9 @@ h1, h2, h3, h4, h5, h6 {
     color: white;
     padding: 3rem 0 1rem;
     margin-top: 4rem;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 .footer-content {
@@ -1255,6 +1336,10 @@ h1, h2, h3, h4, h5, h6 {
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 2rem;
     margin-bottom: 2rem;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 2rem;
 }
 
 .footer-section h5 {
@@ -1280,6 +1365,11 @@ h1, h2, h3, h4, h5, h6 {
     padding-top: 1rem;
     text-align: center;
     color: rgba(255, 255, 255, 0.6);
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 2rem;
+    padding-right: 2rem;
 }
 
 /* Floating Music Notes */

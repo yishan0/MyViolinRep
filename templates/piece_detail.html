@@ -39,6 +39,27 @@
                     </div>
                 {% endif %}
                 
+                <!-- Submitter Information -->
+                <div class="piece-submitter-info">
+                    <p class="submitter-label">Submitted by:</p>
+                    <div class="submitter-details">
+                        {% if piece.submitter %}
+                            <a href="{{ url_for('profile', username=piece.submitter.username) }}" class="submitter-link">
+                                {% if piece.submitter.avatar %}
+                                    <img src="{{ piece.submitter.avatar }}" alt="{{ piece.submitter.username }}" class="submitter-avatar">
+                                {% else %}
+                                    <div class="submitter-avatar-placeholder" style="width: 24px; height: 24px; font-size: 0.7rem;">
+                                        {{ piece.submitter.username[0].upper() }}
+                                    </div>
+                                {% endif %}
+                                <span class="submitter-username">{{ piece.submitter.username }}</span>
+                            </a>
+                        {% else %}
+                            <span class="submitter-unknown">Unknown</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
                 <div class="piece-actions-main">
                     {% if current_user.is_authenticated %}
                         <button class="btn btn-outline" onclick="toggleFavorite({{ piece.id }})" id="favorite-btn">
@@ -51,6 +72,12 @@
                         <a href="{{ piece.recording_link }}" target="_blank" class="btn btn-primary">
                             <i class="fas fa-play"></i> Listen
                         </a>
+                    {% endif %}
+                    
+                    {% if current_user.is_authenticated and current_user.username == 'admin' %}
+                        <button class="btn btn-warning" onclick="editPiece({{ piece.id }})">
+                            <i class="fas fa-edit"></i> Edit Piece
+                        </button>
                     {% endif %}
                 </div>
             </div>
@@ -184,13 +211,13 @@
             
             {% if piece.performance_links %}
                 <div class="info-card">
-                    <h3><i class="fas fa-video"></i> Recommended Performances</h3>
+                    <h3><i class="fas fa-video"></i> Available Sheet Music</h3>
                     <div class="performance-links">
                         {% set links = piece.performance_links|from_json %}
                         {% for link in links %}
                             <a href="{{ link }}" target="_blank" class="performance-link">
                                 <i class="fas fa-external-link-alt"></i>
-                                <span>Performance {{ loop.index }}</span>
+                                <span>Link to Sheet Music {{ loop.index }}</span>
                             </a>
                         {% endfor %}
                     </div>
@@ -199,6 +226,60 @@
         </div>
     </div>
 </section>
+
+<!-- Similar Pieces -->
+{% if similar_pieces %}
+<section class="similar-pieces-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Similar Pieces</h2>
+            <p>Discover other pieces you might enjoy</p>
+        </div>
+        
+        <div class="similar-pieces-carousel">
+            <div class="carousel-container">
+                <div class="carousel-track" id="similar-pieces-carousel">
+                    {% for similar_piece in similar_pieces %}
+                    <div class="carousel-item">
+                        <a href="{{ url_for('piece_detail', piece_id=similar_piece.id) }}" class="similar-piece-link">
+                            <div class="similar-piece-cover">
+                                {% if similar_piece.cover_image %}
+                                    <img src="{{ similar_piece.cover_image }}" alt="{{ similar_piece.title }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                                {% else %}
+                                    <div class="similar-piece-placeholder">
+                                        <i class="fas fa-music"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="similar-piece-info">
+                                <h4 class="similar-piece-title">{{ similar_piece.title }}</h4>
+                                <p class="similar-piece-composer">{{ similar_piece.composer }}</p>
+                                <div class="similar-piece-meta">
+                                    <span class="similar-piece-era">{{ similar_piece.era }}</span>
+                                    <span class="similar-piece-genre">{{ similar_piece.genre }}</span>
+                                </div>
+                                {% if similar_piece.difficulty_avg %}
+                                <div class="similar-piece-difficulty">
+                                    <span class="difficulty-label">Difficulty:</span>
+                                    <span class="difficulty-score">{{ "%.1f"|format(similar_piece.difficulty_avg) }}/10</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <button class="carousel-btn carousel-prev" onclick="scrollSimilarCarousel(1)">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="carousel-btn carousel-next" onclick="scrollSimilarCarousel(-1)">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+</section>
+{% endif %}
 
 <!-- Community Discussion -->
 <section class="community-discussion">
@@ -302,6 +383,40 @@
                                 </button>
                                 {% endif %}
                             </div>
+                            
+                            <!-- Display replies -->
+                            {% if comment.replies %}
+                                <div class="replies-section">
+                                    {% for reply in comment.replies %}
+                                        <div class="comment-reply" data-reply-id="{{ reply.id }}">
+                                            <div class="reply-header">
+                                                <div class="reply-author">
+                                                    <i class="fas fa-reply"></i>
+                                                    <a href="{{ url_for('profile', username=reply.user.username) }}" class="author-link">
+                                                        <span class="author-name">{{ reply.user.username }}</span>
+                                                    </a>
+                                                    <span class="reply-date">{{ reply.date_posted.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                                                </div>
+                                                {% if current_user.is_authenticated and (current_user.id == reply.user_id or current_user.username == 'admin') %}
+                                                    <div class="reply-actions">
+                                                        {% if current_user.id == reply.user_id %}
+                                                            <button class="action-btn edit-btn" onclick="editReply({{ reply.id }})" title="Edit">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                        {% endif %}
+                                                        <button class="action-btn delete-btn" onclick="deleteReply({{ reply.id }})" title="Delete">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="reply-content" id="reply-content-{{ reply.id }}">
+                                                <p>{{ reply.content }}</p>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
                     {% endfor %}
                 </div>
@@ -324,7 +439,7 @@
 .piece-header {
     background: linear-gradient(135deg, #8B0000, #DAA520);
     color: white;
-    padding: 4rem 0;
+    padding: 2.5rem 0;
     text-align: center;
 }
 
@@ -336,7 +451,7 @@
 .piece-banner {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 3rem;
+    gap: 2rem;
     align-items: start;
     max-width: 1200px;
     margin: 0 auto;
@@ -370,14 +485,14 @@
 .piece-info-main {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
 }
 
 .piece-meta-badges {
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     justify-content: center;
 }
 
@@ -450,11 +565,175 @@
     box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
 }
 
-.piece-title-large {
-    font-size: 3rem;
-    margin: 0;
-    line-height: 1.2;
-}
+    .piece-title-large {
+        font-size: 3rem;
+        margin: 0;
+        line-height: 1.2;
+        color: white;
+    }
+
+    /* Similar Pieces Carousel Styles */
+    .similar-pieces-section {
+        padding: 2.5rem 0;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+
+    .similar-pieces-carousel {
+        position: relative;
+        overflow: hidden;
+        margin-top: 1.5rem;
+    }
+
+    .carousel-container {
+        overflow: hidden;
+        border-radius: 12px;
+    }
+
+    .carousel-track {
+        display: flex;
+        gap: 1.5rem;
+        transition: transform 0.3s ease;
+        padding: 0.75rem 0;
+    }
+
+    .carousel-item {
+        flex: 0 0 280px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .carousel-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .similar-piece-link {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .similar-piece-cover {
+        width: 100%;
+        height: 160px;
+        background: linear-gradient(135deg, #8B0000, #DAA520);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .similar-piece-placeholder {
+        color: white;
+        font-size: 3rem;
+        opacity: 0.8;
+    }
+
+            .similar-piece-info {
+            padding: 0.75rem;
+        }
+
+    .similar-piece-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0 0 0.25rem 0;
+        color: #2c3e50;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .similar-piece-composer {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin: 0 0 0.5rem 0;
+        font-weight: 500;
+    }
+
+    .similar-piece-meta {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.5rem;
+    }
+
+    .similar-piece-era,
+    .similar-piece-genre {
+        font-size: 0.75rem;
+        padding: 0.3rem 0.6rem;
+        border-radius: 15px;
+        font-weight: 500;
+    }
+
+    .similar-piece-era {
+        background: rgba(139, 0, 0, 0.1);
+        color: #8B0000;
+    }
+
+    .similar-piece-genre {
+        background: rgba(218, 165, 32, 0.1);
+        color: #B8860B;
+    }
+
+    .similar-piece-difficulty {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .similar-piece-difficulty .difficulty-label {
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    .similar-piece-difficulty .difficulty-score {
+        color: #8B0000;
+        font-weight: 600;
+    }
+
+    .carousel-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(139, 0, 0, 0.9);
+        color: white;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 20;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .carousel-btn:hover {
+        background: #8B0000;
+        transform: translateY(-50%) scale(1.1);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .carousel-prev {
+        left: 10px;
+    }
+
+    .carousel-next {
+        right: 10px;
+    }
+
+    .carousel-btn i {
+        font-size: 1rem;
+    }
 
 .piece-composer-large {
     font-size: 2rem;
@@ -483,7 +762,7 @@
 }
 
 .difficulty-section {
-    padding: 4rem 0;
+    padding: 2.5rem 0;
     background: #f8f9fa;
 }
 
@@ -496,17 +775,17 @@
 .difficulty-header h2 {
     font-size: 2.5rem;
     color: #2c3e50;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .difficulty-header p {
     font-size: 1.125rem;
     color: #6c757d;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
 }
 
 .difficulty-display-large {
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
 }
 
 .difficulty-meter-large {
@@ -515,7 +794,7 @@
     background: #e9ecef;
     border-radius: 10px;
     overflow: hidden;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .difficulty-fill-large {
@@ -526,7 +805,7 @@
 }
 
 .difficulty-score-large {
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .score-number {
@@ -550,7 +829,7 @@
 
 .user-rating-section {
     background: white;
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: 16px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
@@ -558,14 +837,14 @@
 .user-rating-section p {
     font-size: 1.125rem;
     color: #2c3e50;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .rating-stars-large {
     display: flex;
     justify-content: center;
     gap: 0.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .star-btn-large {
@@ -615,7 +894,7 @@
 }
 
 .technical-info {
-    padding: 4rem 0;
+    padding: 2.5rem 0;
     background: white;
 }
 
@@ -629,7 +908,7 @@
 
 .info-card {
     background: #f8f9fa;
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: 16px;
     border-left: 4px solid #8B0000;
 }
@@ -638,7 +917,7 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    margin: 0 0 1.5rem 0;
+    margin: 0 0 1rem 0;
     color: #2c3e50;
     font-size: 1.25rem;
 }
@@ -693,19 +972,19 @@
 }
 
 .community-discussion {
-    padding: 4rem 0;
+    padding: 2.5rem 0;
     background: #f8f9fa;
 }
 
 .discussion-header {
     text-align: center;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
 }
 
 .discussion-header h2 {
     font-size: 2.5rem;
     color: #2c3e50;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .discussion-header p {
@@ -716,9 +995,9 @@
 
 .comment-form-container {
     max-width: 800px;
-    margin: 0 auto 3rem;
+    margin: 0 auto 2rem;
     background: white;
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: 16px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
@@ -726,7 +1005,7 @@
 .comment-form {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
 }
 
 .form-group {
@@ -834,11 +1113,11 @@
 
 .login-prompt-large {
     text-align: center;
-    padding: 3rem;
+    padding: 2rem;
     background: white;
     border-radius: 16px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
 }
 
 .login-prompt-large p {
@@ -865,19 +1144,19 @@
 .comments-section h3 {
     font-size: 1.75rem;
     color: #2c3e50;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     text-align: center;
 }
 
 .comments-list {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
 }
 
 .comment-item {
     background: white;
-    padding: 1.5rem;
+    padding: 1.25rem;
     border-radius: 16px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease;
@@ -891,7 +1170,7 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .comment-author {
@@ -955,7 +1234,7 @@
 }
 
 .comment-content {
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .comment-content p {
@@ -967,7 +1246,7 @@
 .comment-tags {
     display: flex;
     gap: 0.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     flex-wrap: wrap;
 }
 
@@ -1005,7 +1284,7 @@
 
 .no-comments {
     text-align: center;
-    padding: 4rem 2rem;
+    padding: 2.5rem 1.5rem;
     background: white;
     border-radius: 16px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
@@ -1019,13 +1298,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 2rem;
+    margin: 0 auto 1.5rem;
     font-size: 2rem;
     color: white;
 }
 
 .no-comments h4 {
-    margin: 0 0 1rem 0;
+    margin: 0 0 0.75rem 0;
     color: #2c3e50;
 }
 
@@ -1037,16 +1316,16 @@
 
 .reply-form {
     background: #f8f9fa;
-    padding: 1.5rem;
+    padding: 1.25rem;
     border-radius: 12px;
-    margin-top: 1rem;
-    margin-bottom: 1rem;
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
     border: 1px solid #e9ecef;
 }
 
 .reply-input-container {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem;
     align-items: flex-end;
 }
 
@@ -1072,15 +1351,15 @@
 }
 
 .reply-actions .btn {
-    padding: 0.75rem 1.5rem;
+    padding: 0.75rem 1.25rem;
 }
 
 .comment-reply {
     background: #f8f9fa;
-    padding: 1.5rem;
+    padding: 1.25rem;
     border-radius: 12px;
-    margin-top: 1rem;
-    margin-bottom: 1rem;
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
     border: 1px solid #e9ecef;
 }
 
@@ -1088,7 +1367,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
 }
 
 .reply-author {
@@ -1113,8 +1392,65 @@
     color: #2c3e50;
 }
 
+.replies-section {
+    margin-top: 0.75rem;
+    margin-left: 1.5rem;
+    border-left: 2px solid #e9ecef;
+    padding-left: 0.75rem;
+}
+
+.comment-reply {
+    background: #f8f9fa;
+    padding: 0.75rem;
+    border-radius: 12px;
+    margin-bottom: 0.75rem;
+    border: 1px solid #e9ecef;
+}
+
+.reply-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+}
+
+.reply-author {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.reply-author i {
+    color: #8B0000;
+    font-size: 0.875rem;
+}
+
+.reply-author .author-link {
+    color: #8B0000;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.reply-author .author-link:hover {
+    color: #DAA520;
+}
+
+.reply-date {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.reply-actions {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.reply-content {
+    font-size: 0.9rem;
+}
+
 .ratings-history {
-    padding: 4rem 0;
+    padding: 2.5rem 0;
     background: #f8f9fa;
 }
 
@@ -1125,13 +1461,13 @@
 
 .ratings-history .section-header {
     text-align: center;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
 }
 
 .ratings-history .section-header h2 {
     font-size: 2.5rem;
     color: #2c3e50;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .ratings-history .section-header p {
@@ -1148,7 +1484,7 @@
 
 .rating-item {
     background: white;
-    padding: 1.5rem;
+    padding: 1.25rem;
     border-radius: 16px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     display: flex;
@@ -1220,6 +1556,36 @@
     
     .piece-composer-large {
         font-size: 1.5rem;
+    }
+    
+    /* Similar Pieces Mobile Styles */
+    .carousel-item {
+        flex: 0 0 240px;
+    }
+    
+    .similar-piece-cover {
+        height: 140px;
+    }
+    
+            .similar-piece-info {
+            padding: 0.75rem;
+        }
+    
+    .similar-piece-title {
+        font-size: 1rem;
+    }
+    
+    .carousel-btn {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .carousel-prev {
+        left: 5px;
+    }
+    
+    .carousel-next {
+        right: 5px;
     }
     
     .difficulty-header h2 {
@@ -1507,33 +1873,69 @@ function submitReply(commentId) {
         return;
     }
     
-    // Create reply element
-    const replyElement = document.createElement('div');
-    replyElement.className = 'comment-reply';
-    replyElement.innerHTML = `
-        <div class="reply-header">
-            <div class="reply-author">
-                <i class="fas fa-reply"></i>
-                <span class="author-name">{{ current_user.username }}</span>
-                <span class="reply-date">Just now</span>
-            </div>
-        </div>
-        <div class="reply-content">
-            <p>${replyText}</p>
-        </div>
-    `;
-    
-    // Insert reply after the reply form
-    const replyForm = commentItem.querySelector('.reply-form');
-    replyForm.parentNode.insertBefore(replyElement, replyForm.nextSibling);
-    
-    // Remove reply form
-    replyForm.remove();
-    
-    // Clear input
-    replyInput.value = '';
-    
-    showMessage('Reply posted successfully!', 'success');
+    // Send reply to server
+    fetch('/add_reply', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            parent_id: commentId,
+            content: replyText
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Create reply element with server data
+            const replyElement = document.createElement('div');
+            replyElement.className = 'comment-reply';
+            replyElement.setAttribute('data-reply-id', data.reply.id);
+            replyElement.innerHTML = `
+                <div class="reply-header">
+                    <div class="reply-author">
+                        <i class="fas fa-reply"></i>
+                        <span class="author-name">${data.reply.author}</span>
+                        <span class="reply-date">${data.reply.date_posted}</span>
+                    </div>
+                    <div class="reply-actions">
+                        <button class="action-btn edit-btn" onclick="editReply(${data.reply.id})" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete-btn" onclick="deleteReply(${data.reply.id})" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="reply-content" id="reply-content-${data.reply.id}">
+                    <p>${data.reply.content}</p>
+                </div>
+            `;
+            
+            // Get or create replies section
+            let repliesSection = commentItem.querySelector('.replies-section');
+            if (!repliesSection) {
+                repliesSection = document.createElement('div');
+                repliesSection.className = 'replies-section';
+                commentItem.appendChild(repliesSection);
+            }
+            
+            // Add reply to replies section
+            repliesSection.appendChild(replyElement);
+            
+            // Remove reply form
+            const replyForm = commentItem.querySelector('.reply-form');
+            replyForm.remove();
+            
+            showMessage('Reply posted successfully!', 'success');
+        } else {
+            showMessage('Error posting reply: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showMessage('Error posting reply: ' + error.message, 'error');
+    });
 }
 
 function cancelReply(commentId) {
@@ -1580,7 +1982,330 @@ function likeComment(commentId) {
     });
 }
 
+// Reply editing
+function editReply(replyId) {
+    const replyContent = document.getElementById(`reply-content-${replyId}`);
+    const currentText = replyContent.querySelector('p').textContent;
+    
+    const newText = prompt('Edit your reply:', currentText);
+    if (newText && newText !== currentText) {
+        fetch(`/edit_reply/${replyId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ content: newText })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                replyContent.querySelector('p').textContent = newText;
+                showMessage('Reply edited successfully!', 'success');
+            } else {
+                showMessage('Error editing reply: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showMessage('Error editing reply: ' + error.message, 'error');
+        });
+    }
+}
+
+// Reply deletion
+function deleteReply(replyId) {
+    if (confirm('Are you sure you want to delete this reply? This action cannot be undone.')) {
+        fetch(`/delete_reply/${replyId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const replyElement = document.querySelector(`[data-reply-id="${replyId}"]`);
+                replyElement.remove();
+                showMessage('Reply deleted successfully!', 'success');
+            } else {
+                showMessage('Error deleting reply: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showMessage('Error deleting reply: ' + error.message, 'error');
+        });
+    }
+}
+
+// Admin edit piece functionality
+function editPiece(pieceId) {
+    // Get current piece data
+    const title = document.querySelector('.piece-title-large').textContent;
+    const composer = document.querySelector('.piece-composer-large').textContent;
+    const era = document.querySelector('.meta-badge.era').textContent;
+    const genre = document.querySelector('.meta-badge.genre').textContent;
+    const opus = document.querySelector('.meta-badge.opus') ? document.querySelector('.meta-badge.opus').textContent : '';
+    const length = document.querySelector('.piece-length-large') ? document.querySelector('.piece-length-large').textContent : '';
+    const description = document.querySelector('.piece-description p') ? document.querySelector('.piece-description p').textContent : '';
+    
+    // Get recording link
+    const listenBtn = document.querySelector('a[href*="youtube"], a[href*="youtu.be"]');
+    const recordingLink = listenBtn ? listenBtn.href : '';
+    
+    // Get current cover image
+    const coverImg = document.querySelector('.piece-cover-large img');
+    const currentCoverImage = coverImg ? coverImg.src : '';
+    
+    // Get performance links
+    const performanceLinks = [];
+    const performanceLinkElements = document.querySelectorAll('.performance-link');
+    performanceLinkElements.forEach(link => {
+        performanceLinks.push(link.href);
+    });
+    
+    // Get technical tags
+    const technicalTags = [];
+    const tagElements = document.querySelectorAll('.tech-tag');
+    tagElements.forEach(tag => {
+        technicalTags.push(tag.textContent);
+    });
+    
+    // Create edit form
+    const editForm = `
+        <div class="edit-piece-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+            <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+                <h2>Edit Piece</h2>
+                <form id="edit-piece-form">
+                    <div style="margin-bottom: 1rem;">
+                        <label>Title:</label>
+                        <input type="text" name="title" value="${title}" style="width: 100%; padding: 0.5rem; margin-top: 0.25rem;">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>Composer:</label>
+                        <input type="text" name="composer" value="${composer}" style="width: 100%; padding: 0.5rem; margin-top: 0.25rem;">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>Era:</label>
+                        <select name="era" style="width: 100%; padding: 0.5rem; margin-top: 0.25rem;">
+                            <option value="Baroque" ${era === 'Baroque' ? 'selected' : ''}>Baroque</option>
+                            <option value="Classical" ${era === 'Classical' ? 'selected' : ''}>Classical</option>
+                            <option value="Romantic" ${era === 'Romantic' ? 'selected' : ''}>Romantic</option>
+                            <option value="20th Century" ${era === '20th Century' ? 'selected' : ''}>20th Century</option>
+                            <option value="Contemporary" ${era === 'Contemporary' ? 'selected' : ''}>Contemporary</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>Genre:</label>
+                        <select name="genre" style="width: 100%; padding: 0.5rem; margin-top: 0.25rem;">
+                            <option value="Concerto" ${genre === 'Concerto' ? 'selected' : ''}>Concerto</option>
+                            <option value="Sonata" ${genre === 'Sonata' ? 'selected' : ''}>Sonata</option>
+                            <option value="Partita" ${genre === 'Partita' ? 'selected' : ''}>Partita</option>
+                            <option value="Showpiece" ${genre === 'Showpiece' ? 'selected' : ''}>Showpiece</option>
+                            <option value="Caprice" ${genre === 'Caprice' ? 'selected' : ''}>Caprice</option>
+                            <option value="Etude" ${genre === 'Etude' ? 'selected' : ''}>Etude</option>
+                            <option value="Other" ${genre === 'Other' ? 'selected' : ''}>Other</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>Opus:</label>
+                        <input type="text" name="opus" value="${opus}" style="width: 100%; padding: 0.5rem; margin-top: 0.25rem;">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>Length:</label>
+                        <input type="text" name="length" value="${length}" style="width: 100%; padding: 0.5rem; margin-top: 0.25rem;">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>Recording Link:</label>
+                        <input type="url" name="recording_link" value="${recordingLink}" style="width: 100%; padding: 0.5rem; margin-top: 0.25rem;">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>Cover Image:</label>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <input type="file" id="cover-image-upload" accept="image/*" style="flex: 1; padding: 0.5rem;">
+                            <button type="button" onclick="uploadCoverImage()" style="padding: 0.5rem 1rem; background: #28a745; color: white; border: none; border-radius: 4px;">Upload</button>
+                        </div>
+                        <input type="hidden" name="cover_image" id="cover-image-url" value="${currentCoverImage}">
+                        <div id="cover-image-preview" style="margin-top: 0.5rem;">
+                            ${currentCoverImage ? `<img src="${currentCoverImage}" style="max-width: 200px; max-height: 150px; border-radius: 4px;">` : '<p style="color: #6c757d; font-style: italic;">No cover image</p>'}
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>Performance Links (one per line):</label>
+                        <textarea name="performance_links" style="width: 100%; padding: 0.5rem; margin-top: 0.25rem; height: 100px;">${performanceLinks.join('\n')}</textarea>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>Technical Tags (comma-separated):</label>
+                        <input type="text" name="technical_tags" value="${technicalTags.join(', ')}" style="width: 100%; padding: 0.5rem; margin-top: 0.25rem;">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>Description:</label>
+                        <textarea name="description" style="width: 100%; padding: 0.5rem; margin-top: 0.25rem; height: 100px;">${description}</textarea>
+                    </div>
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                        <button type="button" onclick="closeEditModal()" style="padding: 0.5rem 1rem; background: #6c757d; color: white; border: none; border-radius: 4px;">Cancel</button>
+                        <button type="submit" style="padding: 0.5rem 1rem; background: #007bff; color: white; border: none; border-radius: 4px;">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', editForm);
+    
+    // Handle form submission
+    document.getElementById('edit-piece-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        const data = {
+            title: formData.get('title'),
+            composer: formData.get('composer'),
+            era: formData.get('era'),
+            genre: formData.get('genre'),
+            opus: formData.get('opus'),
+            length: formData.get('length'),
+            recording_link: formData.get('recording_link'),
+            cover_image: formData.get('cover_image'),
+            performance_links: formData.get('performance_links').split('\n').filter(link => link.trim()),
+            technical_tags: formData.get('technical_tags').split(',').map(tag => tag.trim()).filter(tag => tag),
+            description: formData.get('description')
+        };
+        
+        fetch(`/admin/edit/${pieceId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage('Piece updated successfully!', 'success');
+                closeEditModal();
+                // Reload the page to show changes
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showMessage('Error updating piece: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showMessage('Error updating piece: ' + error.message, 'error');
+        });
+    });
+}
+
+function closeEditModal() {
+    const modal = document.querySelector('.edit-piece-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function uploadCoverImage() {
+    const fileInput = document.getElementById('cover-image-upload');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showMessage('Please select a file first', 'error');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('cover_image', file);
+    
+    fetch('/admin/upload_cover_image', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update the hidden input with the new URL
+            document.getElementById('cover-image-url').value = data.file_url;
+            
+            // Update the preview
+            const preview = document.getElementById('cover-image-preview');
+            preview.innerHTML = `<img src="${data.file_url}" style="max-width: 200px; max-height: 150px; border-radius: 4px;">`;
+            
+            showMessage('Cover image uploaded successfully!', 'success');
+        } else {
+            showMessage('Error uploading cover image: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('Error uploading cover image: ' + error.message, 'error');
+    });
+}
+
 // Message display function
+function scrollSimilarCarousel(direction) {
+    console.log('scrollSimilarCarousel called with direction:', direction);
+    const carousel = document.getElementById('similar-pieces-carousel');
+    if (!carousel) {
+        console.log('Carousel not found');
+        return;
+    }
+    
+    // Get all carousel items
+    const items = carousel.querySelectorAll('.carousel-item');
+    if (items.length === 0) {
+        console.log('No carousel items found');
+        return;
+    }
+    
+    // Simple approach: scroll by one item width
+    const itemWidth = 280; // Width of each carousel item
+    const gap = 24; // Gap between items (1.5rem = 24px)
+    const scrollAmount = itemWidth + gap;
+    
+    // Get current transform value
+    let currentX = 0;
+    const currentTransform = carousel.style.transform;
+    if (currentTransform && currentTransform.includes('translateX')) {
+        const match = currentTransform.match(/translateX\((-?\d+)px\)/);
+        if (match) {
+            currentX = parseInt(match[1]);
+        }
+    }
+    
+    const newX = currentX + (direction * scrollAmount);
+    
+    // Calculate bounds - don't scroll past the beginning or end
+    const container = carousel.parentElement;
+    const containerWidth = container.offsetWidth;
+    const totalWidth = items.length * (itemWidth + gap) - gap;
+    const maxScroll = Math.min(0, containerWidth - totalWidth);
+    
+    // Clamp the new position
+    const clampedX = Math.max(maxScroll, Math.min(0, newX));
+    
+    console.log('Scrolling carousel:', {
+        direction,
+        currentX,
+        newX,
+        clampedX,
+        containerWidth,
+        totalWidth,
+        maxScroll,
+        itemsCount: items.length
+    });
+    
+    carousel.style.transform = `translateX(${clampedX}px)`;
+}
+
+// Initialize carousel when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page loaded, initializing carousel...');
+    const carousel = document.getElementById('similar-pieces-carousel');
+    if (carousel) {
+        console.log('Carousel found, items:', carousel.querySelectorAll('.carousel-item').length);
+        // Reset position to start
+        carousel.style.transform = 'translateX(0px)';
+    } else {
+        console.log('Carousel not found on page load');
+    }
+});
+
 function showMessage(message, type) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message message-${type}`;

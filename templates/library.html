@@ -30,13 +30,9 @@
                         <label for="composer">Composer</label>
                         <select name="composer" id="composer" class="filter-select">
                             <option value="">All Composers</option>
-                            <option value="Bach" {{ 'selected' if request.args.get('composer') == 'Bach' }}>Bach</option>
-                            <option value="Beethoven" {{ 'selected' if request.args.get('composer') == 'Beethoven' }}>Beethoven</option>
-                            <option value="Brahms" {{ 'selected' if request.args.get('composer') == 'Brahms' }}>Brahms</option>
-                            <option value="Mozart" {{ 'selected' if request.args.get('composer') == 'Mozart' }}>Mozart</option>
-                            <option value="Paganini" {{ 'selected' if request.args.get('composer') == 'Paganini' }}>Paganini</option>
-                            <option value="Tchaikovsky" {{ 'selected' if request.args.get('composer') == 'Tchaikovsky' }}>Tchaikovsky</option>
-                            <option value="Vivaldi" {{ 'selected' if request.args.get('composer') == 'Vivaldi' }}>Vivaldi</option>
+                            {% for composer in composers %}
+                                <option value="{{ composer }}" {{ 'selected' if request.args.get('composer') == composer }}>{{ composer }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                     
@@ -208,6 +204,11 @@
                     
                     <div class="piece-footer">
                         <a href="{{ url_for('piece_detail', piece_id=piece.id) }}" class="btn btn-outline btn-sm">View Details</a>
+                        {% if current_user.is_authenticated and current_user.username == 'admin' %}
+                            <button class="btn btn-warning btn-sm" onclick="editPieceFromLibrary({{ piece.id }})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        {% endif %}
                         {% if current_user.is_authenticated %}
                             <div class="rating-section">
                                 <div class="rating-label">Rate this piece:</div>
@@ -947,6 +948,8 @@
     font-size: 0.875rem;
 }
 
+
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .pieces-grid {
@@ -1142,9 +1145,11 @@ function ratePiece(pieceId, rating) {
                 difficultyFill.style.width = newWidth + '%';
                 difficultyScore.textContent = data.new_average.toFixed(1) + '/10';
                 
-                // Update rating count (increment by 1)
-                const currentCount = parseInt(ratingCount.textContent.match(/\d+/)[0]);
-                ratingCount.textContent = `(${currentCount + 1} ratings)`;
+                // Update rating count (only increment if it's a new rating)
+                if (data.is_new_rating) {
+                    const currentCount = parseInt(ratingCount.textContent.match(/\d+/)[0]);
+                    ratingCount.textContent = `(${currentCount + 1} ratings)`;
+                }
             }
             
             // Update star display
@@ -1234,6 +1239,11 @@ function sortPieces(sortBy) {
 
 function showPieceDetails(pieceId) {
     // This could open a modal or redirect to piece detail page
+    window.location.href = `/piece/${pieceId}`;
+}
+
+function editPieceFromLibrary(pieceId) {
+    // Redirect to piece detail page where admin can edit
     window.location.href = `/piece/${pieceId}`;
 }
 

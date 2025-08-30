@@ -49,12 +49,9 @@
                     
                     <div class="direct-messages">
                         <h4>Direct Messages</h4>
-                        <div class="dm-search">
-                            <input type="text" id="dm-search" placeholder="Search users..." class="dm-search-input">
-                            <div class="search-results" id="search-results"></div>
-                        </div>
-                        <div class="dm-list" id="dm-list">
-                            <!-- DMs will be populated here -->
+                        <div class="dm-disabled-notice">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Coming soon - use group chat for now</span>
                         </div>
                     </div>
                 </div>
@@ -73,6 +70,9 @@
                         </button>
                         <button class="action-btn" id="settings-btn" title="Chat Settings">
                             <i class="fas fa-cog"></i>
+                        </button>
+                        <button class="action-btn" id="faq-btn" title="Chat FAQ">
+                            <i class="fas fa-question-circle"></i>
                         </button>
                         {% if current_user.username == 'admin' %}
                             <button class="action-btn admin-btn" id="admin-panel-btn" title="Admin Panel">
@@ -104,42 +104,10 @@
                         </div>
                     </form>
                     
-                    <!-- Emoji Picker -->
-                    <div id="emoji-picker" class="emoji-picker">
-                        <div class="emoji-categories">
-                            <button class="emoji-category active" data-category="smileys">😀</button>
-                            <button class="emoji-category" data-category="animals">🐶</button>
-                            <button class="emoji-category" data-category="food">🍕</button>
-                            <button class="emoji-category" data-category="activities">⚽</button>
-                            <button class="emoji-category" data-category="travel">✈️</button>
-                            <button class="emoji-category" data-category="objects">💡</button>
-                            <button class="emoji-category" data-category="symbols">❤️</button>
-                            <button class="emoji-category" data-category="flags">🏁</button>
-                        </div>
-                        <div class="emoji-grid" id="emoji-list">
-                            <!-- Emojis will be loaded here -->
-                        </div>
-                    </div>
+                    <!-- Hidden file input for attachments -->
+                    <input type="file" id="file-input" style="display: none;" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt" multiple>
                     
-                    <!-- Attachment Menu -->
-                    <div id="attachment-menu" class="attachment-menu">
-                        <div class="attachment-option" onclick="addImageLink()">
-                            <i class="fas fa-image"></i>
-                            <span>Image Link</span>
-                        </div>
-                        <div class="attachment-option" onclick="addYouTubeLink()">
-                            <i class="fab fa-youtube"></i>
-                            <span>YouTube Video</span>
-                        </div>
-                        <div class="attachment-option" onclick="addSpotifyLink()">
-                            <i class="fab fa-spotify"></i>
-                            <span>Spotify Track</span>
-                        </div>
-                        <div class="attachment-option" onclick="addSheetMusicLink()">
-                            <i class="fas fa-music"></i>
-                            <span>Sheet Music</span>
-                        </div>
-                    </div>
+
                 </div>
             </div>
         </div>
@@ -241,62 +209,110 @@
     </div>
 </div>
 
-<!-- Chat Features Info -->
-<section class="chat-features">
-    <div class="container">
-        <h2>Chat Features</h2>
-        
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="fas fa-bolt"></i>
-                </div>
-                <h3>Real-time Messaging</h3>
-                <p>Instant communication with fellow violinists around the world</p>
+
+
+<!-- Chat FAQ Modal -->
+<div id="chat-faq-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Chat Features & FAQ</h3>
+            <button class="close-modal" onclick="closeChatFAQ()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="faq-section">
+                <h4><i class="fas fa-bolt"></i> Real-time Messaging</h4>
+                <p>Instant communication with fellow violinists around the world. Messages update every 2 seconds for real-time conversation.</p>
             </div>
             
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="fas fa-users"></i>
-                </div>
-                <h3>Multiple Chat Rooms</h3>
-                <p>Join specialized discussions for technique, repertoire, and more</p>
+            <div class="faq-section">
+                <h4><i class="fas fa-users"></i> Chat Rooms</h4>
+                <p><strong>General:</strong> Open discussions about anything violin-related<br>
+                <strong>Technique Tips:</strong> Share and discuss playing techniques<br>
+                <strong>Repertoire Discussion:</strong> Talk about pieces, composers, and interpretations</p>
             </div>
             
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="fas fa-comment-dots"></i>
-                </div>
-                <h3>Direct Messages</h3>
-                <p>Private conversations with other users</p>
+            <div class="faq-section">
+                <h4><i class="fas fa-smile"></i> Emojis & Attachments</h4>
+                <p><strong>Emoji Button:</strong> Click the smiley face to add emojis to your messages<br>
+                <strong>Attachment Button:</strong> Click the paperclip to share:<br>
+                • Images (🖼️)<br>
+                • YouTube Videos (🎥)<br>
+                • Spotify Tracks (🎵)<br>
+                • Sheet Music (📜)</p>
             </div>
             
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
-                <h3>Safe Environment</h3>
-                <p>Moderated chat ensuring respectful and helpful discussions</p>
+            <div class="faq-section">
+                <h4><i class="fas fa-info-circle"></i> Direct Messages</h4>
+                <p>Direct messaging is temporarily disabled. Please use the group chat rooms for discussions. This feature will be available in an upcoming update!</p>
             </div>
             
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="fas fa-search"></i>
-                </div>
-                <h3>Message Search</h3>
-                <p>Find specific conversations and topics quickly</p>
+            <div class="faq-section">
+                <h4><i class="fas fa-shield-alt"></i> Safe Environment</h4>
+                <p>Our chat is moderated to ensure respectful and helpful discussions. Please be kind and constructive in your conversations.</p>
             </div>
             
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="fas fa-mobile-alt"></i>
-                </div>
-                <h3>Mobile Friendly</h3>
-                <p>Chat on any device, anywhere, anytime</p>
+            <div class="faq-section">
+                <h4><i class="fas fa-mobile-alt"></i> Mobile Friendly</h4>
+                <p>Chat works on any device - desktop, tablet, or mobile. The interface adapts to your screen size automatically.</p>
             </div>
         </div>
     </div>
-</section>
+</div>
+
+<!-- Emoji Selection Modal -->
+<div id="emoji-modal" class="modal">
+    <div class="modal-content emoji-modal-content">
+        <div class="modal-header">
+            <h3>Choose an Emoji</h3>
+            <button class="close-modal" onclick="closeEmojiModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="emoji-grid" id="emoji-modal-list">
+                <!-- Emojis will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Attachment Selection Modal -->
+<div id="attachment-modal" class="modal">
+    <div class="modal-content attachment-modal-content">
+        <div class="modal-header">
+            <h3>Add Attachment</h3>
+            <button class="close-modal" onclick="closeAttachmentModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="attachment-options">
+                <div class="attachment-option" onclick="openFilePicker('image')">
+                    <i class="fas fa-folder-open"></i>
+                    <span>Upload Image</span>
+                    <p>Select an image from your device</p>
+                </div>
+                <div class="attachment-option" onclick="openFilePicker('video')">
+                    <i class="fas fa-video"></i>
+                    <span>Upload Video</span>
+                    <p>Select a video from your device</p>
+                </div>
+                <div class="attachment-option" onclick="openFilePicker('audio')">
+                    <i class="fas fa-music"></i>
+                    <span>Upload Audio</span>
+                    <p>Select an audio file from your device</p>
+                </div>
+                <div class="attachment-option" onclick="openFilePicker('document')">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Upload Document</span>
+                    <p>Select a document from your device</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_css %}
@@ -655,6 +671,17 @@
 .action-btn:hover {
     background: rgba(139, 0, 0, 0.05);
     color: #8B0000;
+}
+
+.message-actions {
+    display: flex;
+    gap: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.message:hover .message-actions {
+    opacity: 1;
 }
 
 .admin-btn {
@@ -1089,54 +1116,7 @@
     font-weight: 500;
 }
 
-/* Chat Features */
-.chat-features {
-    padding: 4rem 0;
-    background: white;
-}
 
-.chat-features h2 {
-    text-align: center;
-    margin-bottom: 3rem;
-    color: #2c3e50;
-}
-
-.features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
-    max-width: 1000px;
-    margin: 0 auto;
-}
-
-.feature-card {
-    text-align: center;
-    padding: 2rem;
-}
-
-.feature-icon {
-    width: 80px;
-    height: 80px;
-    background: linear-gradient(135deg, #8B0000, #DAA520);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1.5rem;
-    font-size: 2rem;
-    color: white;
-}
-
-.feature-card h3 {
-    margin: 0 0 1rem 0;
-    color: #2c3e50;
-}
-
-.feature-card p {
-    color: #6c757d;
-    margin: 0;
-    line-height: 1.6;
-}
 
 @media (max-width: 768px) {
     .chat-container {
@@ -1158,11 +1138,6 @@
     .page-title {
         font-size: 2rem;
     }
-    
-    .features-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
 }
 
 /* Emoji Picker */
@@ -1180,6 +1155,7 @@
     overflow-y: auto;
     z-index: 1000;
     display: none;
+    margin-bottom: 10px;
 }
 
 #emoji-list {
@@ -1206,7 +1182,7 @@
 #attachment-menu {
     position: absolute;
     bottom: 100%;
-    left: 0;
+    right: 0;
     background: white;
     border: 1px solid #e9ecef;
     border-radius: 8px;
@@ -1215,6 +1191,7 @@
     min-width: 200px;
     z-index: 1000;
     display: none;
+    margin-bottom: 10px;
 }
 
 .attachment-option {
@@ -1411,6 +1388,159 @@
 #emoji-btn, #attach-btn {
     position: relative;
 }
+
+/* DM Disabled Notice - Compact */
+.dm-disabled-notice {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.dm-disabled-notice i {
+    color: #8B0000;
+    font-size: 0.875rem;
+}
+
+/* Message Links */
+.message-link {
+    color: #8B0000;
+    text-decoration: underline;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.message-link:hover {
+    color: #DAA520;
+    text-decoration: none;
+}
+
+.own-message .message-link {
+    color: #FFD700;
+}
+
+.own-message .message-link:hover {
+    color: #FFFFFF;
+}
+
+
+
+/* FAQ Modal */
+.faq-section {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.faq-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.faq-section h4 {
+    color: #8B0000;
+    font-size: 1rem;
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.faq-section h4 i {
+    color: #DAA520;
+}
+
+.faq-section p {
+    color: #6c757d;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.faq-section strong {
+    color: #2c3e50;
+}
+
+/* Emoji Modal */
+.emoji-modal-content {
+    max-width: 500px;
+    max-height: 80vh;
+}
+
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 10px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.emoji-grid .emoji {
+    font-size: 1.5rem;
+    padding: 8px;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+.emoji-grid .emoji:hover {
+    background-color: #f0f0f0;
+}
+
+/* Attachment Modal */
+.attachment-modal-content {
+    max-width: 400px;
+}
+
+.attachment-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    padding: 20px;
+}
+
+.attachment-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.attachment-option:hover {
+    border-color: #8B0000;
+    background-color: #f8f8f8;
+    transform: translateY(-2px);
+}
+
+.attachment-option i {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    color: #8B0000;
+}
+
+.attachment-option span {
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.attachment-option p {
+    font-size: 0.85rem;
+    color: #666;
+    margin: 0;
+}
 </style>
 {% endblock %}
 
@@ -1454,6 +1584,11 @@ function switchRoom(roomName) {
 // Initialize chat
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Chat page loaded, currentUser:', currentUser);
+    console.log('Setting up event listeners...');
+    
+    // Test if functions are accessible
+    console.log('toggleEmojiPicker function:', typeof toggleEmojiPicker);
+    console.log('toggleAttachmentMenu function:', typeof toggleAttachmentMenu);
     
     // Add click-outside-to-close functionality for emoji picker and attachment menu
     document.addEventListener('click', function(event) {
@@ -1484,25 +1619,10 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Room parameter from URL:', roomParam);
     
     if (roomParam && roomParam.startsWith('dm_')) {
-        // Extract username from DM room
-        const usernames = roomParam.split('_').slice(1);
-        console.log('Extracted usernames:', usernames);
-        
-        if (usernames.length === 2) {
-            // Find which username is NOT the current user
-            let otherUsername;
-            if (usernames[0] === currentUser) {
-                otherUsername = usernames[1];
-            } else if (usernames[1] === currentUser) {
-                otherUsername = usernames[0];
-            } else {
-                // If neither matches currentUser, use the second one (this handles cases where usernames might be in different order)
-                otherUsername = usernames[1];
-            }
-            
-            console.log('Starting DM with:', otherUsername, 'from room:', roomParam);
-            startDM(otherUsername);
-        }
+        // DM rooms are disabled - redirect to general
+        console.log('DM room detected but DMs are disabled - redirecting to general');
+        showMessage('Direct messaging is temporarily disabled. Please use the group chat rooms instead. This feature will be available in an upcoming update!', 'info');
+        switchRoom('general');
     } else if (roomParam) {
         console.log('Switching to room:', roomParam);
         // Switch to specific room
@@ -1524,30 +1644,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Set up DM search
-    const dmSearch = document.getElementById('dm-search');
-    if (dmSearch) {
-        dmSearch.addEventListener('input', function() {
-            const query = this.value.trim();
-            if (query.length >= 2) {
-                searchUsers(query);
-            } else {
-                const searchResults = document.getElementById('search-results');
-                if (searchResults) {
-                    searchResults.innerHTML = '';
-                    searchResults.style.display = 'none';
-                }
-            }
-        });
-        
-        // Hide search results when clicking outside
-        document.addEventListener('click', function(e) {
-            const searchResults = document.getElementById('search-results');
-            if (searchResults && !dmSearch.contains(e.target) && !searchResults.contains(e.target)) {
-                searchResults.style.display = 'none';
-            }
-        });
-    }
+    // DM search is disabled - no need to set up event listeners
     
     // Set up other event listeners
     setupEventListeners();
@@ -1582,41 +1679,26 @@ function setupEventListeners() {
         });
     }
     
-    // DM search
-    document.getElementById('dm-search').addEventListener('input', function() {
-        searchUsers(this.value);
-    });
+    // FAQ button
+    const faqBtn = document.getElementById('faq-btn');
+    if (faqBtn) {
+        faqBtn.addEventListener('click', function() {
+            openChatFAQ();
+        });
+    }
+    
+    // DM search is disabled
+    
+    // Emoji and attachment buttons now use inline onclick handlers
 }
 
-// Start DM with user
+// Start DM with user (DISABLED)
 function startDM(username) {
-    currentDM = username;
-    currentRoom = null;
+    // Direct messaging is temporarily disabled
+    showMessage('Direct messaging is temporarily disabled. Please use the group chat rooms (General, Technique Tips, or Repertoire Discussion) instead. This feature will be available in an upcoming update!', 'info');
     
-    // Update UI
-    document.querySelectorAll('.room-item').forEach(item => item.classList.remove('active'));
-    document.querySelectorAll('.dm-item').forEach(item => item.classList.remove('active'));
-    
-    // Update current room display
-    document.getElementById('current-room-name').innerHTML = `<i class="fas fa-user"></i> ${username}`;
-    
-    // Clear chat
-    document.getElementById('chat-messages').innerHTML = '';
-    
-    // Add system message
-    addSystemMessage(`Started direct message with ${username}`);
-    
-    // Get the room name from the URL parameter (it's already correct)
-    const urlParams = new URLSearchParams(window.location.search);
-    const roomName = urlParams.get('room');
-    
-    console.log('Loading messages for DM room:', roomName);
-    
-    // Load messages for this DM
-    loadMessages(roomName);
-    
-    // Update DM list to include this new DM
-    loadActiveDMs();
+    // Redirect to general chat instead
+    switchRoom('general');
 }
 
 // Send message
@@ -1626,14 +1708,8 @@ function sendMessage() {
     
     if (!content) return;
     
-    let room;
-    if (currentDM) {
-        // For DMs, get the room name from the URL parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        room = urlParams.get('room');
-    } else {
-        room = currentRoom;
-    }
+    // Only group chat rooms are supported now
+    const room = currentRoom;
     
     // Clear input immediately to prevent double-sending
     messageInput.value = '';
@@ -1645,8 +1721,7 @@ function sendMessage() {
         },
         body: JSON.stringify({
             content: content,
-            room: room,
-            recipient: currentDM
+            room: room
         })
     })
     .then(response => response.json())
@@ -1658,12 +1733,14 @@ function sendMessage() {
             // Reload messages to get the latest from server
             setTimeout(() => {
                 loadMessages(room);
-            }, 200);
+            }, 100);
             
-            // Update DM list to show the new message
-            if (currentDM) {
-                loadActiveDMs();
-            }
+            // DM functionality is disabled
+            
+            // Force immediate message refresh for real-time updates
+            setTimeout(() => {
+                loadMessages(room, true);
+            }, 500);
         } else {
             showMessage('Error sending message: ' + data.message, 'error');
             // Restore message content if sending failed
@@ -1695,18 +1772,20 @@ function addMessage(sender, content, isOwn, timestamp = null, messageId = null) 
         <div class="message-header">
             <span class="message-sender">${sender}</span>
             <span class="message-time">${time}</span>
-            ${isOwn ? `
+            ${isOwn || currentUser === 'admin' ? `
                 <div class="message-actions">
-                    <button class="action-btn" onclick="editMessage('${messageId}')" title="Edit">
-                        <i class="fas fa-edit"></i>
-                    </button>
+                    ${isOwn ? `
+                        <button class="action-btn" onclick="editMessage('${messageId}')" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    ` : ''}
                     <button class="action-btn" onclick="deleteMessage('${messageId}')" title="Delete">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
             ` : ''}
         </div>
-        <div class="message-content">${content}</div>
+        <div class="message-content">${formatMessageContent(content)}</div>
     `;
     
     chatMessages.appendChild(messageDiv);
@@ -1784,10 +1863,7 @@ function loadMessages(room, silent = false) {
                         displayMessages();
                     }
                     
-                    // Update DM list to show new messages
-                    if (currentDM) {
-                        loadActiveDMs();
-                    }
+                                // DM functionality is disabled
                     
                     // Play notification sound for new messages from others
                     if (!silent) {
@@ -1832,35 +1908,23 @@ function displayMessages() {
 
 // Start real-time updates
 function startRealTimeUpdates() {
-    // Update online users every 30 seconds
-    setInterval(loadOnlineUsers, 30000);
+    // Update online users every 60 seconds (reduced frequency to lower avatar calls)
+    setInterval(loadOnlineUsers, 60000);
     
-    // Update messages every 5 seconds for current room (more frequent for better responsiveness)
+    // Update messages every 2 seconds for current room (more frequent for better responsiveness)
     setInterval(() => {
-        if (currentDM) {
-            // Get the room name from the URL parameter for DMs
-            const urlParams = new URLSearchParams(window.location.search);
-            const room = urlParams.get('room');
-            if (room) {
-                loadMessages(room, true); // silent update
-            }
-        } else if (currentRoom) {
+        if (currentRoom) {
             loadMessages(currentRoom, true); // silent update
         }
-    }, 5000);
+    }, 2000);
+    
+    // DM functionality is disabled - no need to update DM list
     
     // Also check for new messages when user becomes active
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
             // User became active, check for new messages
-            if (currentDM) {
-                // Get the room name from the URL parameter for DMs
-                const urlParams = new URLSearchParams(window.location.search);
-                const room = urlParams.get('room');
-                if (room) {
-                    loadMessages(room, true);
-                }
-            } else if (currentRoom) {
+            if (currentRoom) {
                 loadMessages(currentRoom, true);
             }
         }
@@ -1875,20 +1939,14 @@ function loadOnlineUsers() {
         .then(data => {
             if (data.success) {
                 displayOnlineUsers(data.users);
-                // Only load active DMs if we're in a DM
-                if (currentDM) {
-                    loadActiveDMs();
-                }
+                // DM functionality is disabled
             }
         })
         .catch(error => {
             console.error('Error loading online users:', error);
             // Fallback to just showing current user
             displayOnlineUsers([{ username: currentUser, status: 'online' }]);
-            // Only load active DMs if we're in a DM
-            if (currentDM) {
-                loadActiveDMs();
-            }
+            // DM functionality is disabled
         });
 }
 
@@ -1924,73 +1982,46 @@ function displayOnlineUsers(users) {
     }
 }
 
-// Load active DMs
+// Avatar cache to prevent multiple requests
+let avatarCache = new Map();
+let lastAvatarUpdate = 0;
+const AVATAR_CACHE_DURATION = 60000; // 1 minute
+
+// Load active DMs (DISABLED)
 function loadActiveDMs() {
-    const dmList = document.getElementById('dm-list');
-    
-    if (!dmList) {
-        console.log('dm-list element not found, skipping loadActiveDMs');
-        return;
-    }
-    
-    console.log('Loading active DMs...');
-    
-    // Get all DMs from the database
-    fetch('/get_active_dms')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.dms.length > 0) {
-                console.log('Found DMs:', data.dms);
-                let html = '';
-                data.dms.forEach(dm => {
-                    const isActive = currentDM === dm.username;
-                    const avatarUrl = dm.avatar || '/static/images/default-avatar.png';
-                    html += `
-                        <div class="dm-item ${isActive ? 'active' : ''}" onclick="startDM('${dm.username}')">
-                            <div class="dm-avatar">
-                                <img src="${avatarUrl}" alt="${dm.username}" onerror="this.src='/static/images/default-avatar.png'">
-                            </div>
-                            <div class="dm-info">
-                                <span class="dm-name">${dm.username}</span>
-                                <span class="dm-status">${dm.last_message ? 'Last message: ' + dm.last_message.substring(0, 30) + '...' : 'No messages yet'}</span>
-                            </div>
-                            <div class="dm-indicator">
-                                <i class="fas fa-circle ${dm.has_unread ? 'unread' : ''}"></i>
-                            </div>
-                        </div>
-                    `;
-                });
-                dmList.innerHTML = html;
-            } else {
-                console.log('No DMs found');
-                dmList.innerHTML = '<div class="no-dms">No DMs yet. Start a conversation!</div>';
-            }
-        })
-        .catch(error => {
-            console.error('Error loading DMs:', error);
-            dmList.innerHTML = '<div class="no-dms">Error loading DMs</div>';
-        });
+    // Direct messaging is temporarily disabled - no need to load DMs
+    console.log('Direct messaging is disabled - skipping DM loading');
 }
 
-// Search users for DM
-function searchUsers(query) {
-    if (query.length < 2) {
-        document.getElementById('search-results').innerHTML = '';
-        return;
+// Get cached avatar or return default
+function getCachedAvatar(avatar, username) {
+    const now = Date.now();
+    
+    // If we have a valid avatar and it's cached, use it
+    if (avatar && avatarCache.has(avatar)) {
+        return avatar;
     }
     
-    fetch(`/get_user_suggestions?q=${encodeURIComponent(query)}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                displaySearchResults(data.users);
-            } else {
-                console.error('Search failed:', data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Search error:', error);
-        });
+    // If no avatar or not cached, use default
+    return '/static/images/default-avatar.png';
+}
+
+// Handle avatar loading errors with caching
+function handleAvatarError(img, username) {
+    const now = Date.now();
+    
+    // Only update default avatar once per minute to prevent spam
+    if (now - lastAvatarUpdate > AVATAR_CACHE_DURATION) {
+        img.src = '/static/images/default-avatar.png';
+        lastAvatarUpdate = now;
+        console.log(`Avatar error for ${username}, using default (cached for 1 minute)`);
+    }
+}
+
+// Search users for DM (DISABLED)
+function searchUsers(query) {
+    // Direct messaging is temporarily disabled
+    showMessage('Direct messaging is temporarily disabled. Please use the group chat rooms (General, Technique Tips, or Repertoire Discussion) instead. This feature will be available in an upcoming update!', 'info');
 }
 
 // Display search results
@@ -2004,11 +2035,11 @@ function displaySearchResults(users) {
     
     let html = '';
     users.forEach(user => {
-        const avatarUrl = user.avatar || '/static/images/default-avatar.png';
+        const avatarUrl = getCachedAvatar(user.avatar, user.username);
         html += `
             <div class="search-result-item" onclick="startDM('${user.username}')">
                 <div class="user-avatar">
-                    <img src="${avatarUrl}" alt="${user.username}" onerror="this.src='/static/images/default-avatar.png'">
+                    <img src="${avatarUrl}" alt="${user.username}" onerror="handleAvatarError(this, '${user.username}')">
                 </div>
                 <div class="user-info">
                     <span class="username">${user.username}</span>
@@ -2048,6 +2079,32 @@ function openAdminModal() {
 
 function closeAdminModal() {
     document.getElementById('admin-modal').style.display = 'none';
+}
+
+// Chat FAQ functions
+function toggleChatFAQ() {
+    const modal = document.getElementById('chat-faq-modal');
+    if (modal.style.display === 'block') {
+        closeChatFAQ();
+    } else {
+        openChatFAQ();
+    }
+}
+
+function openChatFAQ() {
+    document.getElementById('chat-faq-modal').style.display = 'block';
+}
+
+function closeChatFAQ() {
+    document.getElementById('chat-faq-modal').style.display = 'none';
+}
+
+function closeEmojiModal() {
+    document.getElementById('emoji-modal').style.display = 'none';
+}
+
+function closeAttachmentModal() {
+    document.getElementById('attachment-modal').style.display = 'none';
 }
 
 // Settings functions
@@ -2145,37 +2202,70 @@ function viewUserProfile(username) {
 }
 
 function editMessage(messageId) {
-    const messageContent = document.querySelector(`.message-item[data-message-id="${messageId}"]`).querySelector('.message-content');
+    const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (!messageElement) return;
+    
+    const messageContent = messageElement.querySelector('.message-content');
     const currentText = messageContent.textContent;
     
     const newText = prompt('Edit message:', currentText);
     if (newText && newText !== currentText) {
-        messageContent.textContent = newText;
-        showMessage('Message edited successfully!', 'success');
+        // Send edit request to server
+        fetch('/edit_message', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message_id: messageId,
+                content: newText
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                messageContent.innerHTML = formatMessageContent(newText);
+                showMessage('Message edited successfully!', 'success');
+            } else {
+                showMessage('Error editing message: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('Error editing message', 'error');
+        });
     }
 }
 
 function deleteMessage(messageId) {
     if (confirm('Are you sure you want to delete this message?')) {
-        // Implement message deletion via AJAX
-        fetch(`/delete_message/${messageId}`, { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showMessage('Message deleted successfully!', 'success');
-                    // Reload messages to reflect deletion
-                    if (currentDM) {
-                        loadMessages(currentDM);
-                    } else {
-                        loadMessages(currentRoom);
-                    }
-                } else {
-                    showMessage('Error deleting message: ' + data.message, 'error');
-                }
+        // Send delete request to server
+        fetch('/delete_message', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message_id: messageId
             })
-            .catch(error => {
-                showMessage('Error deleting message: ' + error.message, 'error');
-            });
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove message from DOM
+                const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+                if (messageElement) {
+                    messageElement.remove();
+                }
+                showMessage('Message deleted successfully!', 'success');
+            } else {
+                showMessage('Error deleting message: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('Error deleting message', 'error');
+        });
     }
 }
 
@@ -2213,11 +2303,58 @@ function playNotificationSound() {
 
 // Check for new messages from other users
 function checkForNewMessages() {
-    if (currentDM) {
-        const room = `dm_${currentUser}_${currentDM}`;
-        loadMessages(room, true);
-    } else if (currentRoom) {
+    if (currentRoom) {
         loadMessages(currentRoom, true);
+    }
+}
+
+// Format message content to handle links and attachments
+function formatMessageContent(content) {
+    // Convert markdown-style links to HTML links or images
+    const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+    let formattedContent = content.replace(linkRegex, function(match, text, url) {
+        // Check if it's an image link
+        if (text.startsWith('Image:') || url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+            return `<img src="${url}" alt="${text}" class="message-image" onclick="openImageModal('${url}')" style="max-width: 200px; max-height: 200px; border-radius: 8px; cursor: pointer; margin: 5px 0;">`;
+        } else {
+            return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="message-link">${text}</a>`;
+        }
+    });
+    
+    // Convert URLs to clickable links
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    formattedContent = formattedContent.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer" class="message-link">$1</a>');
+    
+    return formattedContent;
+}
+
+// Open image in modal for full view
+function openImageModal(imageUrl) {
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('image-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'image-modal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 90vw; max-height: 90vh; background: transparent; border: none;">
+                <span class="close" onclick="closeImageModal()" style="color: white; font-size: 30px; position: absolute; top: 10px; right: 20px; cursor: pointer; z-index: 1001;">&times;</span>
+                <img id="modal-image" src="" style="max-width: 100%; max-height: 100%; border-radius: 8px;">
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    // Set image source and show modal
+    document.getElementById('modal-image').src = imageUrl;
+    modal.style.display = 'block';
+}
+
+// Close image modal
+function closeImageModal() {
+    const modal = document.getElementById('image-modal');
+    if (modal) {
+        modal.style.display = 'none';
     }
 }
 
@@ -2247,36 +2384,55 @@ function showMessage(message, type) {
     }, 3000);
 }
 
-// Toggle emoji picker
-function toggleEmojiPicker() {
-    const picker = document.getElementById('emoji-picker');
-    const attachmentMenu = document.getElementById('attachment-menu');
-    
-    if (!picker) {
-        console.error('Emoji picker not found');
-        return;
-    }
-    
-    if (picker.style.display === 'block') {
-        picker.style.display = 'none';
-    } else {
-        picker.style.display = 'block';
-        if (attachmentMenu) {
-            attachmentMenu.style.display = 'none';
-        }
-        loadEmojis();
-    }
+// Open emoji modal - Global function
+window.toggleEmojiPicker = function() {
+    console.log('Opening emoji modal');
+    document.getElementById('emoji-modal').style.display = 'block';
+    loadEmojis();
 }
 
 // Load emojis
 function loadEmojis() {
-    const emojiContainer = document.getElementById('emoji-list');
+    const emojiContainer = document.getElementById('emoji-modal-list');
     if (!emojiContainer) {
         console.error('Emoji container not found');
         return;
     }
     
-    const emojis = ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🤗', '🤔', '🤭', '🤫', '🤥', '😶', '😐', '😑', '😯', '😦', '😧', '😮', '😲', '🥱', '😴', '🤤', '😪', '😵', '🤐', '🥴', '🤢', '🤮', '🤧', '😷', '🤒', '🤕', '🤑', '🤠', '🎻', '🎼', '🎵', '🎶', '🎤', '🎧', '🎺', '🎷', '🎸', '🎹', '🥁', '🎯', '🎲', '🎮', '🎰', '🎳', '🎨', '🎬', '🎭', '🎪', '🎟️', '🎫', '🎗️', '🎖️', '🏆', '🏅', '🥇', '🥈', '🥉', '🎊', '🎉', '🎈', '🎂', '🎁', '🎄', '🎃'];
+    // Music and violin themed emojis plus common ones
+    const emojis = [
+        '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', 
+        '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', 
+        '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', 
+        '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', 
+        '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬', 
+        '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🤗', 
+        '🤔', '🤭', '🤫', '🤥', '😶', '😐', '😑', '😯', '😦', '😧', 
+        '😮', '😲', '🥱', '😴', '🤤', '😪', '😵', '🤐', '🥴', '🤢', 
+        '🤮', '🤧', '😷', '🤒', '🤕', '🤑', '🤠', 
+        '🎻', '🎼', '🎵', '🎶', '🎤', '🎧', '🎺', '🎷', '🎸', '🎹', 
+        '🥁', '🎯', '🎲', '🎮', '🎰', '🎳', '🎨', '🎬', '🎭', '🎪', 
+        '🎟️', '🎫', '🎗️', '🎖️', '🏆', '🏅', '🥇', '🥈', '🥉', '🎊', 
+        '🎉', '🎈', '🎂', '🎁', '🎄', '🎃', '👍', '👎', '👌', '✌️', 
+        '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '👇', '☝️', '✋', 
+        '🤚', '🖐️', '🖖', '👋', '🤝', '👏', '🙌', '👐', '🤲', '🤜', 
+        '🤛', '✊', '👊', '👎', '👍', '❤️', '🧡', '💛', '💚', '💙', 
+        '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', 
+        '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉️', '☸️', '✡️', 
+        '🔯', '🕎', '☯️', '☦️', '🛐', '⛎', '♈', '♉', '♊', '♋', 
+        '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓', '🆔', '⚛️', 
+        '🉑', '☢️', '☣️', '📴', '📳', '🈶', '🈚', '🈸', '🈺', '🈷️', 
+        '✴️', '🆚', '💮', '🉐', '㊙️', '㊗️', '🈴', '🈵', '🈹', '🈲', 
+        '🅰️', '🅱️', '🆎', '🆑', '🅾️', '🆘', '❌', '⭕', '🛑', '⛔', 
+        '📛', '🚫', '💯', '💢', '♨️', '🚷', '🚯', '🚳', '🚱', '🔞', 
+        '📵', '🚭', '❗', '❕', '❓', '❔', '‼️', '⁉️', '🔅', '🔆', 
+        '〽️', '⚠️', '🚸', '🔱', '⚜️', '🔰', '♻️', '✅', '🈯', '💹', 
+        '❇️', '✳️', '❎', '🌐', '💠', 'Ⓜ️', '🌀', '💤', '🏧', '🚾', 
+        '♿', '🅿️', '🈳', '🈂️', '🛂', '🛃', '🛄', '🛅', '🚹', '🚺', 
+        '🚼', '🚻', '🚮', '🎦', '📶', '🈁', '🔣', 'ℹ️', '🔤', '🔡', 
+        '🔠', '🆖', '🆗', '🆙', '🆒', '🆕', '🆓', '0️⃣', '1️⃣', '2️⃣', 
+        '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'
+    ];
     
     emojiContainer.innerHTML = '';
     emojis.forEach(emoji => {
@@ -2294,80 +2450,131 @@ function insertEmoji(emoji) {
     if (messageInput) {
         messageInput.value += emoji;
         messageInput.focus();
-        
-        // Hide emoji picker
-        const emojiPicker = document.getElementById('emoji-picker');
-        if (emojiPicker) {
-            emojiPicker.style.display = 'none';
-        }
     }
+    closeEmojiModal();
 }
 
-// Toggle attachment menu
-function toggleAttachmentMenu() {
-    const menu = document.getElementById('attachment-menu');
-    const emojiPicker = document.getElementById('emoji-picker');
+// Open attachment modal - Global function
+window.toggleAttachmentMenu = function() {
+    console.log('Opening attachment modal');
+    document.getElementById('attachment-modal').style.display = 'block';
+}
+
+// Open file picker for different file types
+function openFilePicker(type) {
+    const fileInput = document.getElementById('file-input');
     
-    if (!menu) {
-        console.error('Attachment menu not found');
-        return;
+    // Set accept attribute based on type
+    switch(type) {
+        case 'image':
+            fileInput.accept = 'image/*';
+            break;
+        case 'video':
+            fileInput.accept = 'video/*';
+            break;
+        case 'audio':
+            fileInput.accept = 'audio/*';
+            break;
+        case 'document':
+            fileInput.accept = '.pdf,.doc,.docx,.txt,.rtf';
+            break;
+        default:
+            fileInput.accept = '*/*';
     }
     
-    if (menu.style.display === 'block') {
-        menu.style.display = 'none';
-    } else {
-        menu.style.display = 'block';
-        if (emojiPicker) {
-            emojiPicker.style.display = 'none';
+    // Clear previous files
+    fileInput.value = '';
+    
+    // Open file picker
+    fileInput.click();
+    
+    // Close modal
+    closeAttachmentModal();
+}
+
+// Handle file selection
+document.getElementById('file-input').addEventListener('change', function(e) {
+    const files = e.target.files;
+    if (files.length > 0) {
+        handleFileUpload(files);
+    }
+});
+
+// Handle file upload
+function handleFileUpload(files) {
+    const messageInput = document.getElementById('message-input');
+    
+    for (let file of files) {
+        uploadFile(file, messageInput);
+    }
+}
+
+// Upload file to server
+function uploadFile(file, messageInput) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // Show upload progress
+    const fileIcon = getFileIcon(file.type);
+    const tempText = ` ${fileIcon} Uploading ${file.name}...`;
+    messageInput.value += tempText;
+    
+    fetch('/upload_chat_file', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove the "Uploading..." text
+            messageInput.value = messageInput.value.replace(tempText, '');
+            
+            // Add the actual file link
+            const fileType = getFileType(file.type);
+            const fileIcon = getFileIcon(file.type);
+            
+            if (fileType === 'Image') {
+                // For images, add a clickable link that will display the image
+                const fileLink = ` ${fileIcon} [Image: ${file.name}](${data.file_url})`;
+                messageInput.value += fileLink;
+            } else {
+                // For other files, add a download link
+                const fileLink = ` ${fileIcon} [${fileType}: ${file.name}](${data.file_url})`;
+                messageInput.value += fileLink;
+            }
+        } else {
+            // Remove the "Uploading..." text and show error
+            messageInput.value = messageInput.value.replace(tempText, '');
+            messageInput.value += ` ❌ Upload failed: ${data.message}`;
         }
-    }
+    })
+    .catch(error => {
+        // Remove the "Uploading..." text and show error
+        messageInput.value = messageInput.value.replace(tempText, '');
+        messageInput.value += ` ❌ Upload failed: ${error.message}`;
+    });
 }
 
-// Add image link
-function addImageLink() {
-    const url = prompt('Enter image URL:');
-    if (url && url.trim()) {
-        const messageInput = document.getElementById('message-input');
-        messageInput.value += ` ![Image](${url})`;
-        messageInput.focus();
-        const attachmentMenu = document.getElementById('attachment-menu');
-        if (attachmentMenu) {
-            attachmentMenu.style.display = 'none';
-        }
-    }
+// Get file type category
+function getFileType(mimeType) {
+    if (mimeType.startsWith('image/')) return 'Image';
+    if (mimeType.startsWith('video/')) return 'Video';
+    if (mimeType.startsWith('audio/')) return 'Audio';
+    if (mimeType.includes('pdf')) return 'PDF';
+    if (mimeType.includes('word') || mimeType.includes('document')) return 'Document';
+    if (mimeType.includes('text')) return 'Text';
+    return 'File';
 }
 
-// Add YouTube link
-function addYouTubeLink() {
-    const url = prompt('Enter YouTube URL:');
-    if (url && url.trim()) {
-        const messageInput = document.getElementById('message-input');
-        messageInput.value += ` 🎥 [YouTube](${url})`;
-        messageInput.focus();
-        document.getElementById('attachment-menu').style.display = 'none';
-    }
-}
-
-// Add Spotify link
-function addSpotifyLink() {
-    const url = prompt('Enter Spotify URL:');
-    if (url && url.trim()) {
-        const messageInput = document.getElementById('message-input');
-        messageInput.value += ` 🎵 [Spotify](${url})`;
-        messageInput.focus();
-        document.getElementById('attachment-menu').style.display = 'none';
-    }
-}
-
-// Add sheet music link
-function addSheetMusicLink() {
-    const url = prompt('Enter sheet music URL:');
-    if (url && url.trim()) {
-        const messageInput = document.getElementById('message-input');
-        messageInput.value += ` 📜 [Sheet Music](${url})`;
-        messageInput.focus();
-        document.getElementById('attachment-menu').style.display = 'none';
-    }
+// Get appropriate icon for file type
+function getFileIcon(mimeType) {
+    if (mimeType.startsWith('image/')) return '🖼️';
+    if (mimeType.startsWith('video/')) return '🎥';
+    if (mimeType.startsWith('audio/')) return '🎵';
+    if (mimeType.includes('pdf')) return '📄';
+    if (mimeType.includes('word') || mimeType.includes('document')) return '📝';
+    if (mimeType.includes('text')) return '📄';
+    return '📎';
 }
 
 // Close emoji picker and attachment menu when clicking outside

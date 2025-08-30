@@ -19,7 +19,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///myviolinrep.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # File upload configuration
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'mp4', 'avi', 'mov', 'mp3', 'wav', 'pdf', 'doc', 'docx', 'txt'}
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -92,7 +92,9 @@ class Comment(db.Model):
     content = db.Column(db.Text, nullable=False)
     date_posted = db.Column(db.DateTime, default=datetime.utcnow)
     tags = db.Column(db.Text)  # JSON string for tags
+    parent_id = db.Column(db.Integer, db.ForeignKey('comment.id'), nullable=True)  # For replies
     likes = db.relationship('CommentLike', backref='comment', lazy=True)
+    replies = db.relationship('Comment', backref=db.backref('parent', remote_side=[id]), lazy=True)
 
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -162,6 +164,48 @@ def index():
                          recent_pieces=recent_pieces,
                          top_users=top_users)
 
+def find_similar_pieces(piece, limit=6):
+    """Find similar pieces based on composer, era, genre, and difficulty"""
+    similar_pieces = []
+    
+    # Get pieces by same composer (highest priority)
+    same_composer = Piece.query.filter(
+        Piece.composer == piece.composer,
+        Piece.id != piece.id,
+        Piece.is_approved == True
+    ).limit(2).all()
+    similar_pieces.extend(same_composer)
+    
+    # Get pieces by same era
+    same_era = Piece.query.filter(
+        Piece.era == piece.era,
+        Piece.id != piece.id,
+        Piece.is_approved == True,
+        ~Piece.id.in_([p.id for p in similar_pieces])
+    ).limit(2).all()
+    similar_pieces.extend(same_era)
+    
+    # Get pieces by same genre
+    same_genre = Piece.query.filter(
+        Piece.genre == piece.genre,
+        Piece.id != piece.id,
+        Piece.is_approved == True,
+        ~Piece.id.in_([p.id for p in similar_pieces])
+    ).limit(2).all()
+    similar_pieces.extend(same_genre)
+    
+    # If we don't have enough, fill with random approved pieces
+    if len(similar_pieces) < limit:
+        remaining = limit - len(similar_pieces)
+        random_pieces = Piece.query.filter(
+            Piece.id != piece.id,
+            Piece.is_approved == True,
+            ~Piece.id.in_([p.id for p in similar_pieces])
+        ).order_by(db.func.random()).limit(remaining).all()
+        similar_pieces.extend(random_pieces)
+    
+    return similar_pieces[:limit]
+
 @app.route('/library')
 def library():
     page = request.args.get('page', 1, type=int)
@@ -199,12 +243,16 @@ def library():
     
     pieces = query.order_by(Piece.title).paginate(page=page, per_page=12, error_out=False)
     
-    return render_template('library.html', pieces=pieces)
+    # Get all unique composers from approved pieces for the filter dropdown
+    all_composers = db.session.query(Piece.composer).filter_by(is_approved=True).distinct().order_by(Piece.composer).all()
+    composers = [composer[0] for composer in all_composers]
+    
+    return render_template('library.html', pieces=pieces, composers=composers)
 
 @app.route('/piece/<int:piece_id>')
 def piece_detail(piece_id):
     piece = Piece.query.get_or_404(piece_id)
-    comments = Comment.query.filter_by(piece_id=piece_id).order_by(Comment.date_posted.desc()).all()
+    comments = Comment.query.filter_by(piece_id=piece_id, parent_id=None).order_by(Comment.date_posted.desc()).all()
     user_rating = None
     comment_likes = {}
     user_likes = {}
@@ -225,12 +273,16 @@ def piece_detail(piece_id):
             comment_likes[comment.id] = like_count
             user_likes[comment.id] = False
     
+    # Get similar pieces
+    similar_pieces = find_similar_pieces(piece)
+    
     return render_template('piece_detail.html', 
                          piece=piece, 
                          comments=comments,
                          user_rating=user_rating,
                          comment_likes=comment_likes,
-                         user_likes=user_likes)
+                         user_likes=user_likes,
+                         similar_pieces=similar_pieces)
 
 @app.route('/rate_piece', methods=['POST'])
 @login_required
@@ -240,6 +292,7 @@ def rate_piece():
     rating_value = data['rating']
     
     existing_rating = Rating.query.filter_by(user_id=current_user.id, piece_id=piece_id).first()
+    is_new_rating = existing_rating is None
     
     if existing_rating:
         existing_rating.difficulty_rating = rating_value
@@ -259,7 +312,7 @@ def rate_piece():
     
     db.session.commit()
     
-    return jsonify({'success': True, 'new_average': piece.difficulty_avg})
+    return jsonify({'success': True, 'new_average': piece.difficulty_avg, 'is_new_rating': is_new_rating})
 
 @app.route('/add_comment', methods=['POST'])
 @login_required
@@ -281,6 +334,40 @@ def add_comment():
     db.session.commit()
     
     return jsonify({'success': True})
+
+@app.route('/add_reply', methods=['POST'])
+@login_required
+def add_reply():
+    data = request.get_json()
+    parent_id = data['parent_id']
+    content = data['content'].strip()
+    
+    if not content:
+        return jsonify({'success': False, 'message': 'Reply content cannot be empty'})
+    
+    # Get the parent comment to ensure it exists and get the piece_id
+    parent_comment = Comment.query.get_or_404(parent_id)
+    
+    reply = Comment(
+        user_id=current_user.id,
+        piece_id=parent_comment.piece_id,
+        content=content,
+        parent_id=parent_id
+    )
+    
+    db.session.add(reply)
+    current_user.forum_score += 1
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'reply': {
+            'id': reply.id,
+            'content': reply.content,
+            'author': current_user.username,
+            'date_posted': reply.date_posted.strftime('%B %d, %Y at %I:%M %p')
+        }
+    })
 
 @app.route('/like_comment', methods=['POST'])
 @login_required
@@ -326,6 +413,9 @@ def submit_piece():
         if request.is_json:
             data = request.get_json()
             cover_image_url = data.get('cover_image', '')
+            # Ensure cover_image_url is a string, not a dict
+            if isinstance(cover_image_url, dict):
+                cover_image_url = ''
         else:
             # Handle multipart form data with file upload
             data = request.form.to_dict()
@@ -429,13 +519,20 @@ def profile(username):
     user_comments = Comment.query.filter_by(user_id=user.id).all()
     user_favorites = Favorite.query.filter_by(user_id=user.id).all()
     
+    # Get the actual piece data for favorites
+    favorite_pieces = []
+    for favorite in user_favorites:
+        piece = Piece.query.get(favorite.piece_id)
+        if piece and piece.is_approved:
+            favorite_pieces.append(piece)
 
     return render_template('profile.html', 
                          user=user, 
                          user_pieces=user_pieces,
                          user_ratings=user_ratings,
                          user_comments=user_comments,
-                         user_favorites=user_favorites)
+                         user_favorites=user_favorites,
+                         favorite_pieces=favorite_pieces)
 
 @app.route('/update_profile', methods=['POST'])
 @login_required
@@ -493,6 +590,80 @@ def upload_avatar():
         return jsonify({'success': True, 'avatar': avatar_url})
     
     return jsonify({'success': False, 'message': 'Upload failed'})
+
+@app.route('/upload_chat_file', methods=['POST'])
+@login_required
+def upload_chat_file():
+    if 'file' not in request.files:
+        return jsonify({'success': False, 'message': 'No file uploaded'})
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'success': False, 'message': 'No file selected'})
+    
+    if file and allowed_file(file.filename):
+        # Create uploads directory if it doesn't exist
+        import os
+        upload_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads', 'chat')
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Generate unique filename
+        filename = secure_filename(file.filename)
+        name, ext = os.path.splitext(filename)
+        unique_filename = f"{name}_{current_user.id}_{int(datetime.utcnow().timestamp())}{ext}"
+        filepath = os.path.join(upload_dir, unique_filename)
+        
+        # Save the file
+        file.save(filepath)
+        
+        # Return file URL
+        file_url = f"/static/uploads/chat/{unique_filename}"
+        return jsonify({
+            'success': True, 
+            'file_url': file_url,
+            'filename': filename,
+            'file_type': file.content_type
+        })
+    
+    return jsonify({'success': False, 'message': 'Invalid file type'})
+
+@app.route('/admin/upload_cover_image', methods=['POST'])
+@login_required
+def admin_upload_cover_image():
+    if not current_user.username == 'admin':
+        return jsonify({'success': False, 'message': 'Unauthorized'})
+    
+    if 'cover_image' not in request.files:
+        return jsonify({'success': False, 'message': 'No file uploaded'})
+    
+    file = request.files['cover_image']
+    if file.filename == '':
+        return jsonify({'success': False, 'message': 'No file selected'})
+    
+    if file and allowed_file(file.filename):
+        # Create uploads directory if it doesn't exist
+        import os
+        upload_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads', 'pieces')
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Generate unique filename
+        filename = secure_filename(file.filename)
+        name, ext = os.path.splitext(filename)
+        unique_filename = f"{name}_{int(datetime.utcnow().timestamp())}{ext}"
+        filepath = os.path.join(upload_dir, unique_filename)
+        
+        # Save the file
+        file.save(filepath)
+        
+        # Return file URL
+        file_url = f"/static/uploads/pieces/{unique_filename}"
+        return jsonify({
+            'success': True, 
+            'file_url': file_url,
+            'filename': filename
+        })
+    
+    return jsonify({'success': False, 'message': 'Invalid file type'})
 
 @app.route('/get_emoji_list')
 def get_emoji_list():
@@ -708,6 +879,7 @@ def admin_edit(piece_id):
     data = request.get_json()
     piece = Piece.query.get_or_404(piece_id)
     
+    # Update basic fields
     piece.title = data['title']
     piece.composer = data['composer']
     piece.era = data['era']
@@ -715,9 +887,39 @@ def admin_edit(piece_id):
     piece.opus = data.get('opus', '')
     piece.length = data.get('length', '')
     piece.description = data.get('description', '')
+    piece.recording_link = data.get('recording_link', '')
+    
+    # Handle cover image update
+    if 'cover_image' in data and data['cover_image']:
+        piece.cover_image = data['cover_image']
+    
+    # Handle performance_links
+    performance_links = data.get('performance_links', [])
+    if isinstance(performance_links, str):
+        performance_links = [link.strip() for link in performance_links.split('\n') if link.strip()]
+    elif not isinstance(performance_links, list):
+        performance_links = []
+    piece.performance_links = json.dumps(performance_links)
+    
+    # Handle technical_tags - fix the parsing
+    technical_tags = data.get('technical_tags', [])
+    if isinstance(technical_tags, str):
+        # If it's a comma-separated string, split it
+        if ',' in technical_tags:
+            technical_tags = [tag.strip() for tag in technical_tags.split(',') if tag.strip()]
+        else:
+            # Try to parse as JSON first
+            try:
+                technical_tags = json.loads(technical_tags)
+            except:
+                # If not JSON, treat as single tag
+                technical_tags = [technical_tags.strip()] if technical_tags.strip() else []
+    elif not isinstance(technical_tags, list):
+        technical_tags = []
+    piece.technical_tags = json.dumps(technical_tags)
     
     db.session.commit()
-    return jsonify({'success': True})
+    return jsonify({'success': True, 'message': 'Piece updated successfully!'})
 
 @app.route('/admin/approve-all', methods=['POST'])
 @login_required
@@ -744,10 +946,45 @@ def admin_delete_message(message_id):
     
     return jsonify({'success': True})
 
-@app.route('/delete_message/<int:message_id>', methods=['POST'])
+@app.route('/edit_message', methods=['POST'])
 @login_required
-def delete_message(message_id):
-    message = Message.query.get_or_404(message_id)
+def edit_message():
+    data = request.get_json()
+    message_id = data.get('message_id')
+    new_content = data.get('content', '').strip()
+
+    if not message_id or not new_content:
+        return jsonify({'success': False, 'message': 'Invalid data'})
+
+    message = Message.query.get(message_id)
+    if not message:
+        return jsonify({'success': False, 'message': 'Message not found'})
+
+    # Check if user can edit this message (own message only)
+    if message.sender_id != current_user.id:
+        return jsonify({'success': False, 'message': 'You can only edit your own messages'})
+
+    try:
+        # Update message content
+        message.content = new_content
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Message updated'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'Error updating message'})
+
+@app.route('/delete_message', methods=['POST'])
+@login_required
+def delete_user_message():
+    data = request.get_json()
+    message_id = data.get('message_id')
+
+    if not message_id:
+        return jsonify({'success': False, 'message': 'Invalid data'})
+
+    message = Message.query.get(message_id)
+    if not message:
+        return jsonify({'success': False, 'message': 'Message not found'})
     
     # Check if user can delete this message (own message or admin)
     if message.sender_id != current_user.id and current_user.username != 'admin':
@@ -788,6 +1025,45 @@ def edit_comment(comment_id):
     
     db.session.commit()
     return jsonify({'success': True})
+
+@app.route('/edit_reply/<int:reply_id>', methods=['POST'])
+@login_required
+def edit_reply(reply_id):
+    reply = Comment.query.get_or_404(reply_id)
+    
+    # Check if user owns the reply
+    if reply.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'You can only edit your own replies'})
+    
+    data = request.get_json()
+    new_content = data['content'].strip()
+    
+    if not new_content:
+        return jsonify({'success': False, 'message': 'Reply content cannot be empty'})
+    
+    reply.content = new_content
+    db.session.commit()
+    
+    return jsonify({'success': True})
+
+@app.route('/delete_reply/<int:reply_id>', methods=['POST'])
+@login_required
+def delete_reply(reply_id):
+    reply = Comment.query.get_or_404(reply_id)
+    
+    # Check if user can delete this reply (own reply or admin)
+    if reply.user_id != current_user.id and current_user.username != 'admin':
+        return jsonify({'success': False, 'message': 'You can only delete your own replies'})
+    
+    try:
+        db.session.delete(reply)
+        if reply.user:
+            reply.user.forum_score = max(0, reply.user.forum_score - 1)
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'Error deleting reply'})
 
 @app.route('/send_message', methods=['POST'])
 @login_required
@@ -975,48 +1251,21 @@ def search_users():
 @app.route('/start_chat/<username>')
 @login_required
 def start_chat(username):
-    other_user = User.query.filter_by(username=username).first()
-    if not other_user:
-        return jsonify({'success': False, 'message': 'User not found'})
-    
-    if other_user.id == current_user.id:
-        return jsonify({'success': False, 'message': 'Cannot chat with yourself'})
-    
-    # Create a unique room name using usernames for easier debugging
-    room_name = f"dm_{current_user.username}_{other_user.username}"
-    
+    # Direct messaging is temporarily disabled
     return jsonify({
-        'success': True, 
-        'room_name': room_name,
-        'other_user': {
-            'id': other_user.id,
-            'username': other_user.username,
-            'avatar': other_user.avatar
-        }
+        'success': False, 
+        'message': 'Direct messaging is temporarily disabled. Please use the group chat rooms (General, Technique Tips, or Repertoire Discussion) instead. This feature will be available in an upcoming update!'
     })
 
 @app.route('/get_user_suggestions')
 @login_required
 def get_user_suggestions():
-    query = request.args.get('q', '')
-    if len(query) < 2:
-        return jsonify({'success': True, 'users': []})
-    
-    users = User.query.filter(
-        User.username.ilike(f'%{query}%'),
-        User.id != current_user.id
-    ).limit(10).all()
-    
-    user_list = []
-    for user in users:
-        user_list.append({
-            'id': user.id,
-            'username': user.username,
-            'avatar': user.avatar,
-            'bio': user.bio or 'Violinist'
-        })
-    
-    return jsonify({'success': True, 'users': user_list})
+    # Direct messaging is temporarily disabled
+    return jsonify({
+        'success': False, 
+        'message': 'Direct messaging is temporarily disabled. Please use the group chat rooms (General, Technique Tips, or Repertoire Discussion) instead. This feature will be available in an upcoming update!',
+        'users': []
+    })
 
 @app.route('/admin/cleanup', methods=['POST'])
 @login_required
@@ -1149,56 +1398,12 @@ def get_online_users():
 @app.route('/get_active_dms')
 @login_required
 def get_active_dms():
-    try:
-        # Get all unique DM rooms for the current user
-        # Look for any DM room that contains the current user's username
-        dm_rooms = db.session.query(Message.room).filter(
-            Message.room.like('dm_%')
-        ).distinct().all()
-        
-        dm_list = []
-        for room in dm_rooms:
-            room_name = room[0]
-            # Extract usernames from room name (format: dm_username1_username2)
-            usernames = room_name.split('_')[1:]  # Remove 'dm_' prefix
-            
-            if len(usernames) == 2:
-                username1, username2 = usernames[0], usernames[1]
-                
-                # Check if current user is one of the participants
-                if current_user.username in [username1, username2]:
-                    # Get the other username
-                    other_username = username1 if current_user.username == username2 else username2
-                    
-                    # Get the other user
-                    other_user = User.query.filter_by(username=other_username).first()
-                    if other_user:
-                        # Get the last message in this DM
-                        last_message = Message.query.filter_by(room=room_name).order_by(Message.date_sent.desc()).first()
-                        
-                        # Check if there are unread messages (messages from other user after last read)
-                        unread_count = Message.query.filter(
-                            Message.room == room_name,
-                            Message.sender_id == other_user.id,
-                            Message.date_sent > (last_message.date_sent if last_message else datetime.min)
-                        ).count()
-                        
-                        dm_list.append({
-                            'username': other_username,
-                            'avatar': other_user.avatar,
-                            'last_message': last_message.content if last_message else None,
-                            'last_message_time': last_message.date_sent.isoformat() if last_message else None,
-                            'has_unread': unread_count > 0,
-                            'unread_count': unread_count
-                        })
-        
-        # Sort by last message time (most recent first)
-        dm_list.sort(key=lambda x: x['last_message_time'] or '', reverse=True)
-        
-        return jsonify({'success': True, 'dms': dm_list})
-        
-    except Exception as e:
-        return jsonify({'success': False, 'message': f'Error getting DMs: {str(e)}'})
+    # Direct messaging is temporarily disabled
+    return jsonify({
+        'success': True, 
+        'dms': [],
+        'message': 'Direct messaging is temporarily disabled. Please use the group chat rooms instead.'
+    })
 
 
 
@@ -1221,132 +1426,9 @@ if __name__ == '__main__':
             db.session.commit()
             print("Admin user created: username='admin', password='admin123'")
         
-        # Create sample pieces if they don't exist (these are legitimate music pieces, not fake data)
-        if Piece.query.count() == 0:
-            sample_pieces = [
-                Piece(
-                    title='Violin Concerto No. 1',
-                    composer='Tchaikovsky',
-                    era='Romantic',
-                    genre='Concerto',
-                    opus='Op. 35',
-                    length='35 minutes',
-                    difficulty_avg=0.0,
-                    total_ratings=0,
-                    is_approved=True,
-                    description='A virtuosic concerto featuring technical brilliance and emotional depth.',
-                    technical_tags=json.dumps(['double stops', 'spiccato', 'high positions', 'rapid passages'])
-                ),
-                Piece(
-                    title='Partita No. 2 in D minor',
-                    composer='Bach',
-                    era='Baroque',
-                    genre='Partita',
-                    opus='BWV 1004',
-                    length='30 minutes',
-                    difficulty_avg=0.0,
-                    total_ratings=0,
-                    is_approved=True,
-                    description='A monumental work culminating in the famous Chaconne.',
-                    technical_tags=json.dumps(['chordal passages', 'polyphonic texture', 'ornamentation'])
-                ),
-                Piece(
-                    title='Violin Sonata No. 9',
-                    composer='Beethoven',
-                    era='Classical',
-                    genre='Sonata',
-                    opus='Op. 47',
-                    length='40 minutes',
-                    difficulty_avg=0.0,
-                    total_ratings=0,
-                    is_approved=True,
-                    description='The "Kreutzer" Sonata, one of Beethoven\'s most challenging works.',
-                    technical_tags=json.dumps(['virtuosic passages', 'complex rhythms', 'dynamic contrasts'])
-                ),
-                Piece(
-                    title='Caprice No. 24',
-                    composer='Paganini',
-                    era='Romantic',
-                    genre='Caprice',
-                    opus='Op. 1, No. 24',
-                    length='5 minutes',
-                    difficulty_avg=0.0,
-                    total_ratings=0,
-                    is_approved=True,
-                    description='The famous final caprice from Paganini\'s 24 Caprices.',
-                    technical_tags=json.dumps(['variations', 'technical virtuosity', 'double stops'])
-                ),
-                Piece(
-                    title='Violin Concerto No. 3',
-                    composer='Mozart',
-                    era='Classical',
-                    genre='Concerto',
-                    opus='K. 216',
-                    length='28 minutes',
-                    difficulty_avg=0.0,
-                    total_ratings=0,
-                    is_approved=True,
-                    description='A masterpiece of Classical elegance with beautiful melodies and refined technique.',
-                    technical_tags=json.dumps(['classical elegance', 'mozart style', 'graceful passages'])
-                ),
-                Piece(
-                    title='Violin Concerto No. 1',
-                    composer='Bruch',
-                    era='Romantic',
-                    genre='Concerto',
-                    opus='Op. 26',
-                    length='24 minutes',
-                    difficulty_avg=0.0,
-                    total_ratings=0,
-                    is_approved=True,
-                    description='A beloved Romantic concerto known for its beautiful slow movement and exciting finale.',
-                    technical_tags=json.dumps(['romantic melody', 'cantabile', 'virtuoso passages'])
-                ),
-                Piece(
-                    title='Violin Sonata No. 1',
-                    composer='Brahms',
-                    era='Romantic',
-                    genre='Sonata',
-                    opus='Op. 78',
-                    length='32 minutes',
-                    difficulty_avg=0.0,
-                    total_ratings=0,
-                    is_approved=True,
-                    description='A deeply expressive sonata showcasing Brahms\' mastery of Romantic chamber music.',
-                    technical_tags=json.dumps(['brahms style', 'chamber music', 'romantic depth'])
-                ),
-                Piece(
-                    title='Violin Concerto',
-                    composer='Sibelius',
-                    era='20th Century',
-                    genre='Concerto',
-                    opus='Op. 47',
-                    length='30 minutes',
-                    difficulty_avg=0.0,
-                    total_ratings=0,
-                    is_approved=True,
-                    description='A powerful 20th-century concerto with Nordic character and modern violin technique.',
-                    technical_tags=json.dumps(['nordic style', 'modern technique', 'orchestral writing'])
-                ),
-                Piece(
-                    title='Violin Concerto No. 2',
-                    composer='Prokofiev',
-                    era='20th Century',
-                    genre='Concerto',
-                    opus='Op. 63',
-                    length='26 minutes',
-                    difficulty_avg=0.0,
-                    total_ratings=0,
-                    is_approved=True,
-                    description='A challenging 20th-century concerto with Prokofiev\'s characteristic harmonic language.',
-                    technical_tags=json.dumps(['prokofiev style', 'modern harmony', 'technical brilliance'])
-                )
-            ]
-            
-            for piece in sample_pieces:
-                db.session.add(piece)
-            
-            db.session.commit()
-            print("Sample pieces created")
+        # Sample pieces are commented out - no default pieces will be created
+        # if Piece.query.count() == 0:
+        #     # Create sample pieces here if needed
+        #     pass
         
         app.run(debug=True, port=5002)

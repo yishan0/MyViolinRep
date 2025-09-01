@@ -229,8 +229,11 @@
             <!-- Pagination -->
             {% if pieces.pages > 1 %}
             <div class="pagination">
+                {% set filtered_args = request.args.copy() %}
+                {% set _ = filtered_args.pop('page', None) %}
+                
                 {% if pieces.has_prev %}
-                    <a href="{{ url_for('library', page=pieces.prev_num, **request.args) }}" class="page-link">
+                    <a href="{{ url_for('library', page=pieces.prev_num, **filtered_args) }}" class="page-link">
                         <i class="fas fa-chevron-left"></i> Previous
                     </a>
                 {% endif %}
@@ -238,7 +241,7 @@
                 {% for page_num in pieces.iter_pages() %}
                     {% if page_num %}
                         {% if page_num != pieces.page %}
-                            <a href="{{ url_for('library', page=page_num, **request.args) }}" class="page-link">{{ page_num }}</a>
+                            <a href="{{ url_for('library', page=page_num, **filtered_args) }}" class="page-link">{{ page_num }}</a>
                         {% else %}
                             <span class="page-link active">{{ page_num }}</span>
                         {% endif %}
@@ -248,7 +251,7 @@
                 {% endfor %}
                 
                 {% if pieces.has_next %}
-                    <a href="{{ url_for('library', page=pieces.next_num, **request.args) }}" class="page-link">
+                    <a href="{{ url_for('library', page=pieces.next_num, **filtered_args) }}" class="page-link">
                         Next <i class="fas fa-chevron-right"></i>
                     </a>
                 {% endif %}

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Navigation Test</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="static/css/style.css">
+    
+    <style>
+        /* Test-specific styles */
+        body {
+            padding-top: 100px;
+        }
+        .test-content {
+            padding: 2rem;
+            text-align: center;
+        }
+        .test-content h1 {
+            color: #8B0000;
+            margin-bottom: 2rem;
+        }
+        .test-content p {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        .test-instructions {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+            text-align: left;
+        }
+        .test-instructions h3 {
+            color: #8B0000;
+            margin-bottom: 1rem;
+        }
+        .test-instructions ul {
+            margin-left: 1rem;
+        }
+        .test-instructions li {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-violin"></i>
+                <span>MyViolinRep</span>
+            </div>
+            
+            <div class="nav-menu">
+                <a href="#" class="nav-link">Home</a>
+                <a href="#" class="nav-link">Library</a>
+                <a href="#" class="nav-link">Leaderboard</a>
+                <a href="#" class="nav-link">Chat</a>
+                <a href="#" class="nav-link">Submit Piece</a>
+                
+                <!-- Global Search Bar -->
+                <div class="global-search">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" placeholder="Search" class="global-search-input">
+                </div>
+                
+                <div class="user-menu">
+                    <button class="user-menu-btn">
+                        <i class="fas fa-user-circle"></i>
+                        TestUser
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="user-dropdown">
+                        <a href="#">Profile</a>
+                        <a href="#">Admin Panel</a>
+                        <a href="#">Logout</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Test Content -->
+    <main class="main-content">
+        <div class="test-content">
+            <h1>Mobile Navigation Test</h1>
+            <p>This page tests the mobile navigation functionality.</p>
+            
+            <div class="test-instructions">
+                <h3>Testing Instructions:</h3>
+                <ol>
+                    <li>Resize your browser window to mobile size (below 768px width)</li>
+                    <li>You should see a hamburger menu (three lines) appear</li>
+                    <li>Click the hamburger menu - it should transform to an X</li>
+                    <li>The navigation menu should slide down with all the links</li>
+                    <li>Click on any navigation link - the menu should close</li>
+                    <li>Click outside the menu - it should close</li>
+                    <li>Resize back to desktop - the menu should disappear</li>
+                </ol>
+            </div>
+            
+            <div class="test-instructions">
+                <h3>Expected Behavior:</h3>
+                <ul>
+                    <li>✅ Hamburger icon appears on mobile</li>
+                    <li>✅ Clicking hamburger shows navigation menu</li>
+                    <li>✅ Menu contains all navigation links</li>
+                    <li>✅ Search bar is visible in mobile menu</li>
+                    <li>✅ User menu is visible in mobile menu</li>
+                    <li>✅ Smooth animations and transitions</li>
+                    <li>✅ Menu closes when clicking links or outside</li>
+                </ul>
+            </div>
+            
+            <p><strong>If all items show ✅, the mobile navigation is working correctly!</strong></p>
+        </div>
+    </main>
+
+    <!-- JavaScript -->
+    <script src="static/js/main.js"></script>
+</body>
+</html>

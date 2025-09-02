@@ -2,6 +2,8 @@
 
 **The Ultimate Platform for Violinists to Discover, Discuss, and Master Classical Repertoire**
 
+Visit us at myviolinrep.onrender.com
+
 ## 🎯 What Makes MyViolinRep Unique?
 
 MyViolinRep is not just another music library - it's a **community-driven platform** that combines comprehensive repertoire management with social learning features. Unlike traditional sheet music sites, we focus on **difficulty assessment, community discussion, and collaborative learning** to help violinists of all levels find their next piece and master it effectively.
@@ -21,12 +23,11 @@ MyViolinRep is not just another music library - it's a **community-driven platfo
 - **Rich Metadata**: Composer, era, genre, opus numbers, length, and technical difficulty
 - **Media Integration**: Cover images, recording links, and performance video links
 - **Advanced Filtering**: Search by composer, era, genre, difficulty level, and technical tags
-- **Similar Piece Recommendations**: AI-powered suggestions based on your current piece
+- **Similar Piece Recommendations**: Suggestions on music pieces based on your viewing history
 
 ### 🎯 **Difficulty Assessment System**
 - **Community Ratings**: Difficulty scores (1-10) from actual violinists
 - **Dynamic Averages**: Real-time difficulty calculations based on user ratings
-- **Skill Level Classification**: Beginner (1-3), Intermediate (4-7), Advanced (8-10)
 - **Personal Rating History**: Track your own difficulty assessments
 - **Contribution Scoring**: Earn points for rating pieces and helping the community
 
@@ -83,53 +84,6 @@ MyViolinRep is not just another music library - it's a **community-driven platfo
 - **Music Enthusiasts**: Learn about violin repertoire and classical music
 - **Community Builders**: Connect with fellow violinists worldwide
 
-## 🚀 **Getting Started**
-
-### **Prerequisites**
-- Python 3.8+
-- pip package manager
-
-### **Installation**
-```bash
-# Clone the repository
-git clone [your-repo-url]
-cd MyViolinRep/Website
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Set up environment variables
-export FLASK_APP=app.py
-export FLASK_ENV=development
-
-# Initialize database
-flask run
-```
-
-### **First Run**
-1. Navigate to `http://localhost:5002`
-2. Create an account or use Google OAuth
-3. Start exploring the repertoire library
-4. Join community discussions in the chat rooms
-5. Rate pieces and contribute to the community
-
-## 🔧 **Configuration**
-
-### **Google OAuth Setup**
-1. Create a Google Cloud Project
-2. Enable Google+ API
-3. Create OAuth 2.0 credentials
-4. Update `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `app.py`
-
-### **Admin Access**
-- Default admin credentials: `admin` / `admin123`
-- Change these credentials in production
-- Access admin panel at `/admin/pending`
-
 ## 📱 **Usage Examples**
 
 ### **Finding Your Next Piece**
@@ -181,11 +135,10 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - **Issues**: Report bugs and feature requests via GitHub Issues
 - **Discussions**: Join community discussions in our chat rooms
-- **Email**: [your-email@domain.com]
+- **Email**: sushibalinu@gmail.com
 - **Community**: Connect with fellow violinists on the platform
 
 ---
 
 **Join thousands of violinists worldwide in building the most comprehensive and community-driven violin repertoire platform! 🎻✨**
 
-*Built with ❤️ for the global violin community*
